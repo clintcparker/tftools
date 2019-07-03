@@ -1,0 +1,38 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program",
+            "program": "${file}"
+        },
+
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "scratch",
+            "program": "${workspaceFolder}/scratch.js"
+        },
+
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Scrape",
+            "program": "${workspaceFolder}/scraper1.js"
+        },{
+            "type": "node",
+            "request": "launch",
+            "name": "Coverage",
+            "program": "${workspaceFolder}/coverage.js"
+        },{
+            "type": "node",
+            "request": "launch",
+            "name": "dates",
+            "program": "${workspaceFolder}/dates.js"
+        }
+    ]
+}
