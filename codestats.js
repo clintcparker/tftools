@@ -20,7 +20,7 @@ const statsModule = function(tfsOpts) {
     async function calcStats(statsOpts){
         return new Promise(async resolve => {
             let dates = statsOpts.dates;
-            let results = await asyncPool(1, dates, date => {
+            let results = await asyncPool(6, dates, date => {
                 let opts = Object.assign({},statsOpts);
                 opts.EndDate = new Date(date);
                 return  getCodeStatForDate(opts);
@@ -118,7 +118,7 @@ const statsModule = function(tfsOpts) {
 
     async function getStatsForRepos(repos,TOP_DIRECTORY,outputDirectory,dateStr,getCLOC,getVSTSStats,getTests,resultFile,statsOpts){
         return new Promise(async resolve => {
-            let results = await asyncPool(1, repos, repo => {
+            let results = await asyncPool(6, repos, repo => {
                 return getStatsForRepo(repo, TOP_DIRECTORY,outputDirectory,dateStr,getCLOC,getVSTSStats,getTests,Object.assign({},statsOpts))
             });
 
@@ -257,18 +257,37 @@ const statsModule = function(tfsOpts) {
         if(hash != ""){
             return new Promise( async resolve => {
                 //var cloc_command_args = `cloc --out="${filename}"  --include-lang="C#,Razor,ASP,ASP.NET,HTML,CSS,LESS,PowerShell,JavaScript,TypeScript" ${path.join(TOP_DIRECTORY,repo)}`
+                let  cloc_command_include_lang = {}
+                let cloc_command_exclude_dir = {}
+                let  cloc_command_out = {
+                    "out" : `"${filename}"`,
+                }
+                if (statsOpts.langFilters) {
+                    cloc_command_include_lang = {
+                        "include-lang":`"${statsOpts.langFilters.join(",")}"`,
+                    }
+                }
+                if (statsOpts.excludeDirs){
+                    cloc_command_exclude_dir = {
+                        "exclude-dir":`"${statsOpts.excludeDirs.join(",")}"`,
+                    }
+                }
+                let clocCommandObj = {}
+                Object.assign(clocCommandObj,cloc_command_out,cloc_command_include_lang,cloc_command_exclude_dir)
+                let  clocCommandArr = []
+                for (var propName in clocCommandObj) {
+                    let prop = clocCommandObj[propName] + "";
+                    clocCommandArr.push(`--${propName}=${prop}`)
+                    if ((prop + "").startsWith("~")){
+                        let expanded = expandHomeDir(prop);
+                        clocCommandObj[propName] = expanded;
+                    }
+                }
+                let cloc_command_args = clocCommandArr.join("  ");
 
-                let cloc_command_args = `cloc --out="${filename}"  --include-lang="C#,Razor,ASP,ASP.NET,HTML,CSS,LESS,PowerShell,JavaScript,TypeScript" ${hash}`
-                if (statsOpts.android){
-                    
-                    //cloc_command_args = `cloc --out="${filename}"  --include-lang="Kotlin,Java,XML,Gradle" ${hash}`
-                    cloc_command_args = `cloc --out="${filename}"  ${hash}`
-                }
-                if (statsOpts.langFilters)
-                {
-                    cloc_command_args = `cloc --out="${filename}" --include-lang="${statsOpts.langFilters.join(",")}" ${hash}`
-                }
-                var { stdout, stderr } = await exec(cloc_command_args,{"cwd":`${dirPath}`});
+                let cloc_command = `cloc ${cloc_command_args} ${hash}`
+
+                var { stdout, stderr } = await exec(cloc_command,{"cwd":`${dirPath}`});
                 resolve (stdout);
             });
         }

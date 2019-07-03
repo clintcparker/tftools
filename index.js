@@ -66,7 +66,7 @@ module.exports = function(opts){
     const defaultLangs = {
         dotnet : ["C#","Razor","ASP","ASP.NET","HTML","CSS","LESS","PowerShell","JavaScript","TypeScript"],
         android : ["Kotlin","Java","XML","Gradle"],
-        ios : []
+        ios : ["Objective C","XML","C/C++ Header"]
     };
 
     return {
