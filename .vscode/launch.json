@@ -15,7 +15,7 @@
             "type": "node",
             "request": "launch",
             "name": "scratch",
-            "program": "${workspaceFolder}/scratch.js"
+            "program": "${workspaceFolder}/scratch/scratch.js"
         },
 
         {

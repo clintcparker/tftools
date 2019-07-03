@@ -17,6 +17,25 @@ const statsModule = function(tfsOpts) {
         return  getBuildDefsForRepos(repos,statsOpts.Directory)
     }
 
+    async function calcStats(statsOpts){
+        return new Promise(async resolve => {
+            let dates = statsOpts.dates;
+            let results = await asyncPool(1, dates, date => {
+                let opts = Object.assign({},statsOpts);
+                opts.EndDate = new Date(date);
+                return  getCodeStatForDate(opts);
+            });
+            resolve(results);
+        });
+    }
+
+    function getCodeStatForDate(opts){
+        return new Promise(async resolve => {
+            let  results =  await  calcStatsForDate(opts)
+            resolve(results);
+        });
+    }
+
     async function getBuildDefsForRepos(repos,TOP_DIRECTORY){
         return new Promise(async resolve => {
             let results = await asyncPool(5, repos, repo => {
@@ -44,7 +63,9 @@ const statsModule = function(tfsOpts) {
         }
     }
 
-    async function calcStats(statsOpts) {
+
+
+    async function calcStatsForDate(statsOpts) {
         return new Promise(async (resolve,reject) => {
             for (var propName in statsOpts) {
                 let prop = statsOpts[propName] + "";
