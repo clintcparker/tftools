@@ -1,8 +1,8 @@
 {
-  "name": "vsts-scrape",
-  "version": "1.0.0",
-  "description": "",
-  "main": "scraper1.js",
+  "name": "tftools",
+  "version": "2.0.0",
+  "description": "Tools for getting extra TFS/VSTS/ADO info",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -13,13 +13,10 @@
     "azure-devops-node-api": "^9.0.1",
     "expand-home-dir": "0.0.3",
     "json2csv": "^4.5.1",
-    "odata": "^1.0.2",
-    "puppeteer": "^1.18.1",
     "request": "^2.88.0",
     "retry-request": "^4.1.1",
     "rimraf": "^2.6.3",
     "simple-git": "^1.115.0",
-    "table": "^5.4.1",
     "tiny-async-pool": "^1.0.4"
   }
 }
