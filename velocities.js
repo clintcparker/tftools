@@ -4,10 +4,10 @@ const velocitiesModule = function(tfsOpts) {
     const PROCESSES_PATH = "/_odata/v3.0-preview/Processes";
     const WORKITEMS_PATH = "/_odata/v3.0-preview/WorkItems";
     const WORKITEM_SNAPSHOT_PATH = "/_odata/v3.0-preview/WorkItemSnapshot";
-    var ALL_VELOCITIES_FILE;
     const fs = require('fs');
     const { parse } = require('json2csv');
     const querystring = require("querystring");
+    const asyncPool = require("tiny-async-pool")
     var keepGoingTeams;
     var keepGoingIterations;
     var lastTeam;
@@ -53,7 +53,14 @@ const velocitiesModule = function(tfsOpts) {
     ];
     
     const tfsUtils = require('./ADOUtilities')(tfsOpts);
-    async function getVelocities(velocityOpts){
+    async function getVelocities(incomingVelocityOpts){
+
+        velocityOptsDefaults = {
+            include : [],
+            exclude : []
+        }
+
+        let velocityOpts = Object.assign({},velocityOptsDefaults,incomingVelocityOpts)
 
         for (var propName in velocityOpts) {
             let prop = velocityOpts[propName] + "";
@@ -64,14 +71,13 @@ const velocitiesModule = function(tfsOpts) {
         }
 
 
-        ALL_VELOCITIES_FILE = velocityOpts.outFile;
         try {
             console.time('Overall');
             var teams = await getTeamsForProject(velocityOpts.projectId);
             keepGoingTeams = true;
             keepGoingIterations = true;
             try {
-                var a = await fs.readFileSync(ALL_VELOCITIES_FILE);
+                var a = await fs.readFileSync(velocityOpts.outFile);
                 if(a){
                     var last = a.toString().split("\n").reverse()[0].split(",");
                     lastTeam = last[0];
@@ -83,28 +89,42 @@ const velocitiesModule = function(tfsOpts) {
                 } 
             }   catch {
                 await fs.writeFileSync(
-                    ALL_VELOCITIES_FILE,
+                    velocityOpts.outFile,
                     parse({},{header:true,fields:FIELDS}),
-                    (err) => err ? console.error(`${ALL_VELOCITIES_FILE} not written!` , err) : console.log(`${ALL_VELOCITIES_FILE} written!`)
+                    (err) => err ? console.error(`${velocityOpts.outFile} not written!` , err) : console.log(`${velocityOpts.outFile} written!`)
                 );
                 keepGoingTeams = false;
                 keepGoingIterations = false;
             }
-            var results =[];
-            for (var team of teams) {
-                if(`"${team.TeamName}"` == lastTeam){
-                    keepGoingTeams =false;
-                }
-                if (keepGoingTeams){
-                    continue;
-                }
-                if(team.TeamName == "MBScrum Team" || team.TeamName == "Payments"){
-                    continue;
-                }
-                var teamIterationResults = await getTeamIterationStats(team,velocityOpts.count)
-                results.concat(teamIterationResults);
+            if(velocityOpts.overWrite){
+                await fs.writeFileSync(
+                    velocityOpts.outFile,
+                    parse({},{header:true,fields:FIELDS}),
+                    (err) => err ? console.error(`${velocityOpts.outFile} not written!` , err) : console.log(`${velocityOpts.outFile} written!`)
+                );
+                keepGoingTeams = false;
+                keepGoingIterations = false;
             }
-            console.timeEnd('Overall')
+            if(velocityOpts.exclude && velocityOpts.exclude.length){
+                teams = teams.filter(x=>!velocityOpts.exclude.includes(x.TeamName));
+            }
+            if(velocityOpts.include && velocityOpts.include.length){
+                teams = teams.filter(x=>velocityOpts.include.includes(x.TeamName));
+            }
+            // for (var team of teams) {
+            //     if(`"${team.TeamName}"` == lastTeam){
+            //         keepGoingTeams =false;
+            //     }
+            //     if (keepGoingTeams){
+            //         continue;
+            //     }
+            //     var teamIterationResults = await getTeamIterationStats(team,velocityOpts.count,velocityOpts)
+            //     results.concat(teamIterationResults);
+            // }
+            let results = await asyncPool(1, teams, team =>  {
+                return  getTeamIterationStats(team,velocityOpts.count,velocityOpts);
+            });
+            console.timeLog('Overall')
             return results;
         } catch (error){
             console.log(error)
@@ -113,9 +133,9 @@ const velocitiesModule = function(tfsOpts) {
         }
     }
 
-    async function getTeamIterationStats(team,count){
+    async function getTeamIterationStats(team,count,velocityOpts){
         console.log("starting " + team.TeamName);
-        console.time(team.TeamName,"","","");
+        console.time(team.TeamName);
 
         return new Promise( async (resolve, reject) => {
             try {
@@ -135,12 +155,12 @@ const velocitiesModule = function(tfsOpts) {
                     var iterationStats = await getSingleTeamIterationStats(team, iteration, backlogWorkItemTypes);
                     teamIterationResults.push(iterationStats);
                     await fs.appendFile(
-                        ALL_VELOCITIES_FILE,
+                        velocityOpts.outFile,
                         "\n" +`${parse(iterationStats,{header:false,fields:FIELDS})}`,
                         (err) => err ? console.error('CSV not appended!' , err) : ({})
                     );
                 } 
-                console.timeEnd(team.TeamName,"","","","");
+                console.timeEnd(team.TeamName);
                 resolve(teamIterationResults);
             } catch(error) {
                 reject(error)
@@ -290,7 +310,8 @@ const velocitiesModule = function(tfsOpts) {
     }
 
     return {
-        velocities:getVelocities
+        velocities:getVelocities,
+        velocityFields: FIELDS.map(x=>{if(x.label){return x.value}return x})
     }
 
 }

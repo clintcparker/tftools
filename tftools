@@ -1,0 +1,129 @@
+#!/usr/bin/env node
+
+var program = require("commander");
+const ADOModule = require("./index.js");
+const nodeOs = require("os");
+const nodePath = require("path");
+const thisPackage = require("./package");
+
+var logger = new function() {
+    this.showLogs = true;
+    this.warnings = false;
+
+    this.log = function() {
+        if (this.showLogs) {
+            console.log.apply(this, arguments);
+        }
+    };
+
+    this.warn = function() {
+        if (this.warnings) {
+            console.warn.apply(this, arguments);
+        }
+    };
+}();
+
+const defaultDomain = "https://dev.azure.com";
+const defaultDirectory = ".";
+const defaultOutput = "Desktop/";
+const defaultVelocitiesFile = "velocities.csv"
+
+program
+    .version(thisPackage.version)
+    .option("--domain <url>", "name of your ADO instance. Defaults to " + defaultDomain, defaultDomain)
+    .option("-o, --outputDir <dir>", "optional directory for output. defaults to ~/" + defaultOutput, getOutputDir , getOutputDir(defaultOutput))
+    .option("--pat <PAT>", "ADO PAT ", "")
+    //.option("-c, --openCsv", "open csv file on completion", false)
+    //.option("-w, --warnings", "show warnings", false);
+
+var velocityCommand = program
+    .command("velocities");
+velocityCommand
+    .option("--project <name/id>", "the ADO project analyze","<ENTER A PROJECT NAME>")
+    .option("-c, --count <count>", "the number of team velocities to collect",2)
+    .option("-f, --fileName <name>", "the name of the output file. Defaults to " + defaultVelocitiesFile, defaultVelocitiesFile)
+    .option("--exclude <excluded teams>", "comma separated list of teams to exclude",commaSeparatedList)
+    .option("--include <included teams>", "comma separated list of teams to include",commaSeparatedList)
+    .option("-x, --over_write", "over write the output file if it exists")
+    .description("get  velocities for all teams in a project")
+    .action(()=>{
+        velocities();});
+
+// var compareCmd = program
+//     .command("compare <ref1> <ref2>");
+// compareCmd
+//     .option("-d,--dir <name>", "directory to analyze. defaults to " + defaultDirectory,defaultDirectory)
+//     .description("compare two scans")
+//     .action((arg1,arg2)=>{compare(arg1,arg2);});
+    
+
+// //DEFINE SCAN
+// var scanCmd = program
+//     .command("scan [dir]");
+// scanCmd
+//     .option("-k, --kpi", "output the kpi as a json object. This will hide warnings.")
+//     .description("scan and analyze directory")
+//     .action((args)=>{scan(args);});
+
+program.parse(process.argv);
+
+if (!process.argv.slice(2).length) {
+    program.outputHelp();
+}
+
+//console.log(program);
+function commaSeparatedList(value, dummyPrevious) {
+    return value.split(',');
+  }
+
+async function velocities(){
+    velocityCommands  =  velocityCommand;
+    var ADOOpts = {
+        ADO_HOST  :  program.domain,
+        PAT       :  program.pat,
+    }
+    var velocityOpts = {
+        outFile : velocityCommands.fileName,
+        projectId:velocityCommands.project,
+        count : velocityCommands.count,
+        exclude : velocityCommands.exclude,
+        include : velocityCommands.include,
+        overWrite:velocityCommands.over_write
+    }
+    let  ADOTools = ADOModule(ADOOpts);
+    let velocityFields =ADOTools.velocityFields;
+    let results = await ADOTools.velocities(velocityOpts)
+    console.table(results.flat(),velocityFields)
+}
+
+// function compare(ref1,ref2){
+//     logger.warnings = !!program.warnings;
+//     var compareCommands = compareCmd;
+
+//     var compareOpts = {
+//         warnings        :   !!program.warnings,
+//         summary         :   !!program.summary,
+//         analysisName    :   program.analysisName,
+//         output          :   program.outputDir,
+//         dir             :   compareCommands.dir,
+//         openCsv         :   !!program.openCsv,
+//         before          :   ref1,
+//         after           :   ref2
+//     };
+    
+//     analyzeModule({logger: logger}).startCompare(compareOpts);
+// }
+
+function getDateTimeForPath() {
+    var now = new Date();
+    return `${now.getFullYear()}.${("0" + (now.getMonth() + 1)).slice(-2)}.${("0" + now.getDate()).slice(-2)}-${("0" + now.getHours()).slice(-2)}.${("0" + now.getMinutes()).slice(-2)}.${("0" + now.getSeconds()).slice(-2)}`;
+    // return now.getFullYear() + "" + (now.getMonth() + 1) + "" + now.getDate() + "-" + now.getHours() + "" + now.getMinutes() + "" + now.getSeconds();
+}
+
+function getOutputDir(outputArg){
+    var outputVal = outputArg;
+    if (outputVal == defaultOutput || !outputVal){
+        outputVal = nodePath.join(nodeOs.homedir(),outputVal);
+    }
+    return nodePath.join(outputVal, getDateTimeForPath());
+}

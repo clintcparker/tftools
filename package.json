@@ -6,11 +6,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin":"tftools",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "azure-devops-node-api": "^9.0.1",
+    "commander": "^2.20.0",
     "expand-home-dir": "0.0.3",
     "json2csv": "^4.5.1",
     "request": "^2.88.0",

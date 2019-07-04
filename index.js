@@ -75,6 +75,7 @@ module.exports = function(opts){
         velocities      : velocitiesModule.velocities,
         builds          : buildModule.queueBuilds,
         definitions     : statsModule.getBuildDefs,
-        defaultLangs    : defaultLangs
+        defaultLangs    : defaultLangs,
+        velocityFields  : velocitiesModule.velocityFields
     };
 }
