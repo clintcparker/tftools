@@ -39,9 +39,9 @@ program
 var velocityCommand = program
     .command("velocities");
 velocityCommand
-    .option("--project <name/id>", "the ADO project analyze","<ENTER A PROJECT NAME>")
-    .option("-c, --count <count>", "the number of team velocities to collect",2)
-    .option("-f, --fileName <name>", "the name of the output file. Defaults to " + defaultVelocitiesFile, defaultVelocitiesFile)
+    .option("--project <name>", "the ADO project analyze","<ENTER A PROJECT NAME>")
+    .option("-c, --count <count>", "the number of team velocities to collect",myParseInt)
+    .option("-f --fileName <name>", "the name of the output file. Defaults to " + defaultVelocitiesFile, defaultVelocitiesFile)
     .option("--exclude <excluded teams>", "comma separated list of teams to exclude",commaSeparatedList)
     .option("--include <included teams>", "comma separated list of teams to include",commaSeparatedList)
     .option("-x, --over_write", "over write the output file if it exists")
@@ -76,6 +76,11 @@ function commaSeparatedList(value, dummyPrevious) {
     return value.split(',');
   }
 
+  function myParseInt(value, dummyPrevious) {
+    // parseInt takes a string and an optional radix
+    return parseInt(value,10);
+  }
+
 async function velocities(){
     velocityCommands  =  velocityCommand;
     var ADOOpts = {
@@ -96,23 +101,7 @@ async function velocities(){
     console.table(results.flat(),velocityFields)
 }
 
-// function compare(ref1,ref2){
-//     logger.warnings = !!program.warnings;
-//     var compareCommands = compareCmd;
 
-//     var compareOpts = {
-//         warnings        :   !!program.warnings,
-//         summary         :   !!program.summary,
-//         analysisName    :   program.analysisName,
-//         output          :   program.outputDir,
-//         dir             :   compareCommands.dir,
-//         openCsv         :   !!program.openCsv,
-//         before          :   ref1,
-//         after           :   ref2
-//     };
-    
-//     analyzeModule({logger: logger}).startCompare(compareOpts);
-// }
 
 function getDateTimeForPath() {
     var now = new Date();

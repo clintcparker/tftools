@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "bin":"tftools",
+  "bin": "tftools",
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -20,5 +20,10 @@
     "rimraf": "^2.6.3",
     "simple-git": "^1.115.0",
     "tiny-async-pool": "^1.0.4"
+  },
+  "devDependencies": {
+    "intercept-stdout": "^0.1.2",
+    "sinon": "^7.3.2",
+    "string-argv": "^0.3.0"
   }
 }

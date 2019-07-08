@@ -172,16 +172,15 @@ const velocitiesModule = function(tfsOpts) {
         return new Promise( async(resolve, reject) => {
             try { 
                 var workItems = await getWorkItems(team.ProjectSK,team.TeamId,backlogWorkItemTypes,iteration.IterationSK);
-                var endDate = tfsUtils.buildDateStringForADO(iteration.EndDate,1);
-                var workItemsCompletedLate = await getWorkItemsCompletedLate(team.ProjectSK,team.TeamId,backlogWorkItemTypes,iteration.IterationSK,endDate);
+                var workItemsCompletedLate = await getWorkItemsCompletedLate(team.ProjectSK,team.TeamId,backlogWorkItemTypes,iteration.IterationSK);
                 iteration.late = workItemsCompletedLate;
                 var startDate = tfsUtils.buildDateStringForADO(iteration.StartDate,1);
                 var workItemsPlanned = await getWorkItemsPlanned(team.ProjectSK,team.TeamId,backlogWorkItemTypes,iteration.IterationSK,startDate)
                 iteration.planned = workItemsPlanned;
                 iteration.incomplete = workItems.incomplete;
-                iteration.completed = workItems.completed;
+                iteration.completed = workItems.completed - workItemsCompletedLate;
                 iteration.teamName = team.TeamName;
-                iteration.total = workItemsCompletedLate + workItems.completed;
+                iteration.total = workItems.completed;
                 resolve(iteration);
             } catch (err) {
                 reject(err)
@@ -244,7 +243,7 @@ const velocitiesModule = function(tfsOpts) {
         {
             var completedElem = workItems.find(x=>x.StateCategory == "Completed");
             if(completedElem) {
-                completed = completedElem.AggregationResult ? completedElem.AggregationResult : 0;
+                completed = completedElem.AggregationResult ? completedElem.AggregationResult : 0; //this is the total completed. Note th lack of a date in the query
             }
             var incompleteElem = workItems.find(x=>x.StateCategory == "InProgress");
             if(incompleteElem){
@@ -253,8 +252,8 @@ const velocitiesModule = function(tfsOpts) {
         }
         return {completed:completed,incomplete:incomplete};
     }
-
-    async function getWorkItemsCompletedLate(projectId, teamId, backlogTypes, iteration,endDate)
+    
+    async function getWorkItemsCompletedLate(projectId, teamId, backlogTypes, iteration)
     {
         var workItemFilters = backlogTypes.map(x=>` WorkItemType eq '${x.WorkItemType}' `);
         var workItemFilter = workItemFilters.join(" or ")
@@ -278,7 +277,7 @@ const velocitiesModule = function(tfsOpts) {
         }
         return late;
     }
-
+    
     async function getWorkItemsPlanned(projectId, teamId, backlogTypes, iterationId, iterationStart)
     {
         var workItemFilters = backlogTypes.map(x=>` WorkItemType eq '${x.WorkItemType}' `);
