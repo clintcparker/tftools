@@ -1,10 +1,12 @@
+[![Build Status](https://travis-ci.org/clintcparker/tftools.svg?branch=master)](https://travis-ci.org/clintcparker/tftools)
+
 ### Getting setup for now
 
 from a new directory
 `npm install https://github.com/clintcparker/tftools`
 
 including the reference 
-`const ADOToolsModule = require(“vsts-scrape”)`
+`const ADOToolsModule = require(“tftools”)`
 
 ### Example
 Example for getting the velocities for all teams in a project:
@@ -13,12 +15,12 @@ Make a file with this contents in the new directory:
 
 ```
 var tfsOpts = {
-   ADO_HOST            : “YOUR DOMAIN”, //your domain for ADO, ex: https://mindbody.visualstudio.com
+   ADO_HOST            : “YOUR DOMAIN”, //your domain for ADO, ex: https://fabrikam.visualstudio.com
 }
 
 tfsOpts.PAT = “PAT VALUE”; //your ADO PAT
 
-const ADOToolsModule = require(“vsts-scrape”)
+const ADOToolsModule = require(“tftools”)
 
 var velocityOpts = {
    outFile : `~/Desktop/2velocities.csv`,
@@ -34,4 +36,4 @@ void (async()=>{
 
 update the contents of the file, including `count` and `PAT`
 
-after that, either debug from your nodejs environment, or `node NAME_OF_YOUR_FILE`
+after that, either debug from your nodejs environment, or run `node NAME_OF_YOUR_FILE` in the terminal
