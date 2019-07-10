@@ -14,11 +14,12 @@
     "azure-devops-node-api": "^9.0.1",
     "commander": "^2.20.0",
     "expand-home-dir": "0.0.3",
-    "json2csv": "^4.5.1",
+    "json2csv": "^4.5.2",
+    "lodash": "^4.17.14",
     "request": "^2.88.0",
     "retry-request": "^4.1.1",
     "rimraf": "^2.6.3",
-    "simple-git": "^1.115.0",
+    "simple-git": "^1.120.0",
     "tiny-async-pool": "^1.0.4"
   },
   "devDependencies": {
