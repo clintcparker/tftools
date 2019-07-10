@@ -3,7 +3,10 @@
 ### Getting setup for now
 
 from a new directory
-`npm install https://github.com/clintcparker/tftools`
+`npm install tftools`
+
+or for the global CLI
+`npm install -g tftools`
 
 including the reference 
 `const ADOToolsModule = require(“tftools”)`
