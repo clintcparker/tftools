@@ -7,3 +7,10 @@ branches:
     - master
     - dev
     - testing
+
+deploy:
+  provider: script
+  script: "cp .npmrc.template $HOME/.npmrc && npm publish"
+  skip_cleanup: true
+  on:
+    tags: true
