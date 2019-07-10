@@ -41,29 +41,16 @@ var velocityCommand = program
 velocityCommand
     .option("--project <name>", "the ADO project analyze","<ENTER A PROJECT NAME>")
     .option("-c, --count <count>", "the number of team velocities to collect",myParseInt)
-    .option("-f --fileName <name>", "the name of the output file. Defaults to " + defaultVelocitiesFile, defaultVelocitiesFile)
+    .option("-f --file_name <name>", "the name of the output file. Defaults to " + defaultVelocitiesFile, defaultVelocitiesFile)
     .option("--exclude <excluded teams>", "comma separated list of teams to exclude",commaSeparatedList)
     .option("--include <included teams>", "comma separated list of teams to include",commaSeparatedList)
     .option("-x, --over_write", "over write the output file if it exists")
+    .option("-C, --count_items", "count items instead of summing effort")
+    .option("-p, --planned <days>", "extra days to count from the start of the sprint for planned work", myParseInt,0)
+    .option("-l, --late <days>", "extra days to count from the end of the sprint for late work", myParseInt,0)
     .description("get  velocities for all teams in a project")
     .action(()=>{
         velocities();});
-
-// var compareCmd = program
-//     .command("compare <ref1> <ref2>");
-// compareCmd
-//     .option("-d,--dir <name>", "directory to analyze. defaults to " + defaultDirectory,defaultDirectory)
-//     .description("compare two scans")
-//     .action((arg1,arg2)=>{compare(arg1,arg2);});
-    
-
-// //DEFINE SCAN
-// var scanCmd = program
-//     .command("scan [dir]");
-// scanCmd
-//     .option("-k, --kpi", "output the kpi as a json object. This will hide warnings.")
-//     .description("scan and analyze directory")
-//     .action((args)=>{scan(args);});
 
 program.parse(process.argv);
 
@@ -88,13 +75,19 @@ async function velocities(){
         PAT       :  program.pat,
     }
     var velocityOpts = {
-        outFile : velocityCommands.fileName,
+        outFile : velocityCommands.file_name,
         projectId:velocityCommands.project,
         count : velocityCommands.count,
         exclude : velocityCommands.exclude,
         include : velocityCommands.include,
-        overWrite:velocityCommands.over_write
+        overWrite:velocityCommands.over_write,
+        aggregate: velocityCommands.count_items ? "count" : "sum",
+        extraPlannedDays: velocityCommands.planned,
+        lateAfterDays: velocityCommands.late
+
     }
+    //console.log(ADOOpts)
+    //console.log(velocityOpts)
     let  ADOTools = ADOModule(ADOOpts);
     let velocityFields =ADOTools.velocityFields;
     let results = await ADOTools.velocities(velocityOpts)
@@ -105,7 +98,7 @@ async function velocities(){
 
 function getDateTimeForPath() {
     var now = new Date();
-    return `${now.getFullYear()}.${("0" + (now.getMonth() + 1)).slice(-2)}.${("0" + now.getDate()).slice(-2)}-${("0" + now.getHours()).slice(-2)}.${("0" + now.getMinutes()).slice(-2)}.${("0" + now.getSeconds()).slice(-2)}`;
+    return `tftools/${now.getFullYear()}.${("0" + (now.getMonth() + 1)).slice(-2)}.${("0" + now.getDate()).slice(-2)}/`;
     // return now.getFullYear() + "" + (now.getMonth() + 1) + "" + now.getDate() + "-" + now.getHours() + "" + now.getMinutes() + "" + now.getSeconds();
 }
 

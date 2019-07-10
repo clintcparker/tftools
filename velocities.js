@@ -4,14 +4,16 @@ const velocitiesModule = function(tfsOpts) {
     const PROCESSES_PATH = "/_odata/v3.0-preview/Processes";
     const WORKITEMS_PATH = "/_odata/v3.0-preview/WorkItems";
     const WORKITEM_SNAPSHOT_PATH = "/_odata/v3.0-preview/WorkItemSnapshot";
+    const PROCESS_CONFIG_PATH = "/_apis/work/processconfiguration?api-version=5.0-preview.1"
+    const pathModule = require("path")
     const fs = require('fs');
     const { parse } = require('json2csv');
     const querystring = require("querystring");
     const asyncPool = require("tiny-async-pool")
-    var keepGoingTeams;
-    var keepGoingIterations;
-    var lastTeam;
-    var lastPath;
+    let keepGoingTeams;
+    let keepGoingIterations;
+    let lastTeam;
+    let lastPath;
     const FIELDS = [
         {
             label:"Team",
@@ -57,12 +59,17 @@ const velocitiesModule = function(tfsOpts) {
 
         velocityOptsDefaults = {
             include : [],
-            exclude : []
+            exclude : [],
+            effortWord  : "Effort",//Effort
+            aggregate: "sum",
+            extraPlannedDays: 0,
+            lateAfterDays: 0,
+            overWrite:false
         }
 
         let velocityOpts = Object.assign({},velocityOptsDefaults,incomingVelocityOpts)
 
-        for (var propName in velocityOpts) {
+        for (let propName in velocityOpts) {
             let prop = velocityOpts[propName] + "";
             if ((prop + "").startsWith("~")){
                 let expanded = expandHomeDir(prop);
@@ -73,13 +80,13 @@ const velocitiesModule = function(tfsOpts) {
 
         try {
             console.time('Overall');
-            var teams = await getTeamsForProject(velocityOpts.projectId);
+            let teams = await getTeamsForProject(velocityOpts.projectId);
             keepGoingTeams = true;
             keepGoingIterations = true;
             try {
-                var a = await fs.readFileSync(velocityOpts.outFile);
+                let a = await fs.readFileSync(velocityOpts.outFile);
                 if(a){
-                    var last = a.toString().split("\n").reverse()[0].split(",");
+                    let last = a.toString().split("\n").reverse()[0].split(",");
                     lastTeam = last[0];
                     lastPath = last[1];
                     if (lastTeam == `"NULL"`){
@@ -111,14 +118,15 @@ const velocitiesModule = function(tfsOpts) {
             if(velocityOpts.include && velocityOpts.include.length){
                 teams = teams.filter(x=>velocityOpts.include.includes(x.TeamName));
             }
-            // for (var team of teams) {
+            await setEffortType(velocityOpts);
+            // for (let team of teams) {
             //     if(`"${team.TeamName}"` == lastTeam){
             //         keepGoingTeams =false;
             //     }
             //     if (keepGoingTeams){
             //         continue;
             //     }
-            //     var teamIterationResults = await getTeamIterationStats(team,velocityOpts.count,velocityOpts)
+            //     let teamIterationResults = await getTeamIterationStats(team,velocityOpts.count,velocityOpts)
             //     results.concat(teamIterationResults);
             // }
             let results = await asyncPool(1, teams, team =>  {
@@ -140,10 +148,10 @@ const velocitiesModule = function(tfsOpts) {
         return new Promise( async (resolve, reject) => {
             try {
                 //keepGoingIterations = lastPath && lastPath == "NULL" ? false : true;
-                var backlogWorkItemTypes = await getWorkItemTypes(team.ProjectSK,team.TeamId);
-                var iterations = await getIterationsForTeam(team.ProjectSK,team.TeamId,count);
-                var teamIterationResults = [];
-                for (var iteration of iterations){
+                let backlogWorkItemTypes = await getWorkItemTypes(team.ProjectSK,team.TeamId, velocityOpts);
+                let iterations = await getIterationsForTeam(team.ProjectSK,team.TeamId,count,velocityOpts);
+                let teamIterationResults = [];
+                for (let iteration of iterations){
                     if(`"${iteration.IterationPath}"`== lastPath && keepGoingIterations)
                     {
                         keepGoingIterations = false;
@@ -152,7 +160,7 @@ const velocitiesModule = function(tfsOpts) {
                     if (keepGoingIterations){
                         continue;
                     }
-                    var iterationStats = await getSingleTeamIterationStats(team, iteration, backlogWorkItemTypes);
+                    let iterationStats = await getSingleTeamIterationStats(team, iteration, backlogWorkItemTypes, velocityOpts);
                     teamIterationResults.push(iterationStats);
                     await fs.appendFile(
                         velocityOpts.outFile,
@@ -168,14 +176,13 @@ const velocitiesModule = function(tfsOpts) {
         });
     }
 
-    async function getSingleTeamIterationStats(team,iteration,backlogWorkItemTypes){
+    async function getSingleTeamIterationStats(team,iteration,backlogWorkItemTypes,velocityOpts){
         return new Promise( async(resolve, reject) => {
             try { 
-                var workItems = await getWorkItems(team.ProjectSK,team.TeamId,backlogWorkItemTypes,iteration.IterationSK);
-                var workItemsCompletedLate = await getWorkItemsCompletedLate(team.ProjectSK,team.TeamId,backlogWorkItemTypes,iteration.IterationSK);
+                let workItems = await getWorkItems(team.TeamId,backlogWorkItemTypes,iteration,velocityOpts);
+                let workItemsCompletedLate = await getWorkItemsCompletedLate(team.TeamId,backlogWorkItemTypes,iteration,velocityOpts);
                 iteration.late = workItemsCompletedLate;
-                var startDate = tfsUtils.buildDateStringForADO(iteration.StartDate,1);
-                var workItemsPlanned = await getWorkItemsPlanned(team.ProjectSK,team.TeamId,backlogWorkItemTypes,iteration.IterationSK,startDate)
+                let workItemsPlanned = await getWorkItemsPlanned(team.TeamId,backlogWorkItemTypes,iteration,velocityOpts)
                 iteration.planned = workItemsPlanned;
                 iteration.incomplete = workItems.incomplete;
                 iteration.completed = workItems.completed - workItemsCompletedLate;
@@ -195,16 +202,16 @@ const velocitiesModule = function(tfsOpts) {
             "$select":"IterationSK,IterationName,StartDate,EndDate,IsEnded,IterationPath",
             "$top":`${count}`
         };
-        var path= `/${projectId}${ITERATIONS_PATH}?${querystring.stringify(queryParameters)}`;
-        var rawIterations = await tfsUtils.analyticsRequest(path);
+        let path= `/${projectId}${ITERATIONS_PATH}?${querystring.stringify(queryParameters)}`;
+        let rawIterations = await tfsUtils.analyticsRequest(path);
         return rawIterations.value;
     }
 
     async function getTeamsForProject(projectId)
     {
         // AnalyticsUpdatedDate	"2018-07-31T18:47:53.01Z"
-        var path= `/${projectId}${TEAMS_PATH}`;
-        var teams = await tfsUtils.analyticsRequest(path);
+        let path= `/${projectId}${TEAMS_PATH}`;
+        let teams = await tfsUtils.analyticsRequest(path);
         return teams.value;
     }
 
@@ -216,36 +223,44 @@ const velocitiesModule = function(tfsOpts) {
                     groupby((BacklogCategoryReferenceName, WorkItemType, IsBugType, BacklogName))`
         };
 
-        var path= `${PROCESSES_PATH}?${querystring.stringify(queryParameters)}`;
-        var rawTypes = await tfsUtils.analyticsRequest(path);
-        var backlogItems = rawTypes.value.filter(x=> x.BacklogName == "Backlog items");
+        let path= `${PROCESSES_PATH}?${querystring.stringify(queryParameters)}`;
+        let rawTypes = await tfsUtils.analyticsRequest(path);
+        let backlogItems = rawTypes.value.filter(x=> x.BacklogName == "Backlog items");
         return backlogItems;
     }
 
-    async function getWorkItems(projectId, teamId, backlogTypes, iteration)
+    async function setEffortType(velocityOpts)
     {
-        var workItemFilters = backlogTypes.map(x=>` WorkItemType eq '${x.WorkItemType}' `);
-        var workItemFilter = workItemFilters.join(" or ")
-        var queryParameters = {
+        //https://mindbody.visualstudio.com/MBScrum/_apis/work/processconfiguration?api-version=5.0-preview.1
+        let path = pathModule.join("/",velocityOpts.projectId,PROCESS_CONFIG_PATH)
+        let processInfo = await tfsUtils.ADORequest(path);
+        let effortWord = processInfo.typeFields.Effort.referenceName.split('.').pop();
+        velocityOpts.effortWord = effortWord;
+    }
+
+    async function getWorkItems(teamId, backlogTypes, iteration,velocityOpts)
+    {
+        let workItemLine = buildWorkItemLine(backlogTypes);
+        let queryParameters = {
             "$apply":`filter(Teams/any(t:t/TeamSK eq ${teamId}) 
-                    and (${workItemFilter}) 
-                    and (IterationSK eq ${iteration}) and StateCategory ne null) 
+                    ${workItemLine}
+                    and (IterationSK eq ${iteration.IterationSK}) and StateCategory ne null) 
                     /
-                    groupby((StateCategory, IterationSK),aggregate(Effort with sum as AggregationResult))`
+                    groupby((StateCategory, IterationSK),aggregate(${velocityOpts.effortWord} with sum as AggregationResult))`
         };
 
-        var path= `/${projectId}${WORKITEMS_PATH}?${querystring.stringify(queryParameters)}`;
-        var rawWorkItems = await tfsUtils.analyticsRequest(path);
-        var workItems = rawWorkItems.value;
-        var completed = 0;
-        var incomplete = 0;
+        let path= `/${velocityOpts.projectId}${WORKITEMS_PATH}?${querystring.stringify(queryParameters)}`;
+        let rawWorkItems = await tfsUtils.analyticsRequest(path);
+        let workItems = rawWorkItems.value;
+        let completed = 0;
+        let incomplete = 0;
         if (workItems && workItems.length > 0)
         {
-            var completedElem = workItems.find(x=>x.StateCategory == "Completed");
+            let completedElem = workItems.find(x=>x.StateCategory == "Completed");
             if(completedElem) {
                 completed = completedElem.AggregationResult ? completedElem.AggregationResult : 0; //this is the total completed. Note th lack of a date in the query
             }
-            var incompleteElem = workItems.find(x=>x.StateCategory == "InProgress");
+            let incompleteElem = workItems.find(x=>x.StateCategory == "InProgress");
             if(incompleteElem){
                 incomplete = incompleteElem.AggregationResult ? incompleteElem.AggregationResult : 0;
             }
@@ -253,54 +268,64 @@ const velocitiesModule = function(tfsOpts) {
         return {completed:completed,incomplete:incomplete};
     }
     
-    async function getWorkItemsCompletedLate(projectId, teamId, backlogTypes, iteration)
+    function buildWorkItemLine(backlogTypes){
+        if(backlogTypes.length){
+            let workItemFilters = backlogTypes.map(x=>` WorkItemType eq '${x.WorkItemType}' `);
+            let workItemFilter = workItemFilters.join(" or ")
+            return workItemFilters.length > 0 ? `
+            and (${workItemFilter}) 
+            ` : "";
+        }
+        return "";
+    }
+
+    async function getWorkItemsCompletedLate(teamId, backlogTypes, iteration,velocityOpts)
     {
-        var workItemFilters = backlogTypes.map(x=>` WorkItemType eq '${x.WorkItemType}' `);
-        var workItemFilter = workItemFilters.join(" or ")
-        var queryParameters = {
+        let endDate = velocityOpts.lateAfterDays >= 0 ? tfsUtils.buildDateStringForAnalytics(iteration.EndDate, velocityOpts.lateAfterDays) : `Iteration/EndDate`;
+        let workItemLine = buildWorkItemLine(backlogTypes);
+        let queryParameters = {
             "$apply":`filter(Teams/any(t:t/TeamSK eq ${teamId}) 
-                    and (${workItemFilter}) 
+                    ${workItemLine}
                     and StateCategory eq 'Completed' 
-                    and (IterationSK eq ${iteration}) 
-                    and CompletedDate gt Iteration/EndDate) 
+                    and (IterationSK eq ${iteration.IterationSK}) 
+                    and CompletedDate gt ${endDate}) 
                     /
-                    groupby((StateCategory, IterationSK),aggregate(Effort with sum as AggregationResult))`
+                    groupby((StateCategory, IterationSK),aggregate(${velocityOpts.effortWord} with sum as AggregationResult))`
         };
 
-        var path= `/${projectId}${WORKITEMS_PATH}?${querystring.stringify(queryParameters)}`;
-        var rawWorkItems = await tfsUtils.analyticsRequest(path);
-        var workItems = rawWorkItems.value;
-        var late = 0;
+        let path= `/${velocityOpts.projectId}${WORKITEMS_PATH}?${querystring.stringify(queryParameters)}`;
+        let rawWorkItems = await tfsUtils.analyticsRequest(path);
+        let workItems = rawWorkItems.value;
+        let late = 0;
         if (workItems && workItems[0])
         {
-            late = workItems[0].AggregationResult ? workItems[0].AggregationResult : 0
+            late = workItems[0].AggregationResult ? workItems[0].AggregationResult : 0;
         }
         return late;
     }
     
-    async function getWorkItemsPlanned(projectId, teamId, backlogTypes, iterationId, iterationStart)
+    async function getWorkItemsPlanned(teamId, backlogTypes, iteration,velocityOpts)
     {
-        var workItemFilters = backlogTypes.map(x=>` WorkItemType eq '${x.WorkItemType}' `);
-        var workItemFilter = workItemFilters.join(" or ")
-        var queryParameters = {
+        let iterationStart = tfsUtils.buildDateStringForADO(iteration.StartDate,velocityOpts.extraPlannedDays);
+        let workItemLine = buildWorkItemLine(backlogTypes);
+        let queryParameters = {
             "$apply":`filter(Teams/any(t:t/TeamSK eq  ${teamId}) 
-            and (${workItemFilter}) 
+            ${workItemLine}
             and (RevisedDateSK eq null or RevisedDateSK gt ${iterationStart}) 
             and (
                     (
                         (
-                            (IterationSK eq ${iterationId} and DateSK eq ${iterationStart})) 
-                            and (IterationSK eq ${iterationId}) and (DateSK eq ${iterationStart}))) 
+                            (IterationSK eq ${iteration.IterationSK} and DateSK eq ${iterationStart})) 
+                            and (IterationSK eq ${iteration.IterationSK}) and (DateSK eq ${iterationStart}))) 
                             and StateCategory ne null)
                             /
-                            groupby((IterationSK),aggregate(Effort with sum as AggregationResult))`
+                            groupby((IterationSK),aggregate(${velocityOpts.effortWord} with sum as AggregationResult))`
         };
 
-        var path= `/${projectId}${WORKITEM_SNAPSHOT_PATH}?${querystring.stringify(queryParameters)}`;
-        var rawWorkItems = await 
-        tfsUtils.analyticsRequest(path);
-        var workItems = rawWorkItems.value;
-        var planned = 0;
+        let path= `/${velocityOpts.projectId}${WORKITEM_SNAPSHOT_PATH}?${querystring.stringify(queryParameters)}`;
+        let rawWorkItems = await tfsUtils.analyticsRequest(path);
+        let workItems = rawWorkItems.value;
+        let planned = 0;
         if (workItems && workItems[0])
         {
             planned = workItems[0].AggregationResult;
