@@ -142,9 +142,9 @@ const tfsUtilsModule = function(tfsOpts) {
     function buildDateStringForADO(dateStr,plusDays){
         var date = addDays(new Date(dateStr),plusDays);
         const enUS = "en-US";
-        var MM = date.toLocaleDateString(enUS, {month:'2-digit'});
-        var DD = date.toLocaleDateString(enUS, {day:'2-digit'});
-        var YYYY = date.toLocaleDateString(enUS, {year:'numeric'});
+        var MM =  `${date.getUTCMonth()+1}`.padStart(2,0);
+        var DD = `${date.getUTCDate()}`.padStart(2,0);
+        var YYYY = date.getUTCFullYear();
         return `${YYYY}${MM}${DD}`;
     }
 

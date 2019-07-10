@@ -4,7 +4,7 @@
   "description": "Tools for getting extra TFS/VSTS/ADO info",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "bin": "tftools",
   "keywords": [],
@@ -22,7 +22,10 @@
     "tiny-async-pool": "^1.0.4"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
     "intercept-stdout": "^0.1.2",
+    "mocha": "^6.1.4",
+    "nyc": "^14.1.1",
     "sinon": "^7.3.2",
     "string-argv": "^0.3.0"
   }

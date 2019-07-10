@@ -6,3 +6,5 @@ creds.json
 .DS_Store
 scratch*
 booker.js
+coverage/
+.nyc_output/
