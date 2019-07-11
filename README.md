@@ -34,7 +34,7 @@ var velocityOpts = {
 void (async()=>{
    let ADOTools = ADOToolsModule(tfsOpts)
    let results = await ADOTools.velocities(velocityOpts)
-})(); (edited) 
+})();
 ```
 
 update the contents of the file, including `count` and `PAT`

@@ -15,7 +15,6 @@
     "commander": "^2.20.0",
     "expand-home-dir": "0.0.3",
     "json2csv": "^4.5.2",
-    "lodash": "^4.17.14",
     "request": "^2.88.0",
     "retry-request": "^4.1.1",
     "rimraf": "^2.6.3",
