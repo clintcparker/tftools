@@ -1,6 +1,6 @@
 {
   "name": "tftools",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "Tools for getting extra TFS/VSTS/ADO info",
   "main": "index.js",
   "scripts": {
