@@ -52,6 +52,23 @@ velocityCommand
     .action(()=>{
         velocities();});
 
+
+var statsCommand = program
+    .command("stats");
+statsCommand
+    .option("-d, --directory <dir>", "directory of repos to analyze",defaultDirectory)
+    .option("--dates <dates>", "list of dates to analyze", commaSeparatedList)
+    .option("--project <name>", "the ADO project analyze","<ENTER A PROJECT NAME>")
+    .option("-v, --vsts", "analyze vsts builds")
+    .option("-c, --cloc", "analyze via cloc")
+    .option("-t, --tests", "analyze tests via grep")  
+    .option("-b, --build", "queue ADO builds")  
+    .option("--pull", "pull the latest code")
+    .option("--exclude_dirs <excluded dirs>", "comma separated list of directory to exclude from analysis",commaSeparatedList)
+    .option("--include_lang <included languages>", "comma separated list of languages to include in analysis",commaSeparatedList)
+    .action(() => {
+        stats();
+    });
 program.parse(process.argv);
 
 if (!process.argv.slice(2).length) {
@@ -84,7 +101,7 @@ async function velocities(){
         aggregate: velocityCommands.count_items ? "count" : "sum",
         extraPlannedDays: velocityCommands.planned,
         lateAfterDays: velocityCommands.late
-
+        
     }
     //console.log(ADOOpts)
     //console.log(velocityOpts)
@@ -92,6 +109,37 @@ async function velocities(){
     let velocityFields =ADOTools.velocityFields;
     let results = await ADOTools.velocities(velocityOpts)
     console.table(results.flat(),velocityFields)
+}
+
+async function stats(){
+    var statsCommands  =  statsCommand;
+    var ADOOpts = {
+        ADO_HOST  :  program.domain,
+        PAT       :  program.pat,
+    }
+
+    var statsOpts = {
+
+        Directory : statsCommands.directory,
+        dates : statsCommands.dates,
+        VSTS : statsCommands.vsts,
+        CLOC : statsCommands.cloc,
+        Tests: statsCommands.tests,
+        projectId:statsCommands.project,
+        outputDirectory: program.outputDir,
+        langFilters: statsCommands.include_lang,
+        excludeDirs: statsCommands.exclude_dirs,
+        build : statsCommands.build,
+        pull : statsCommands.pull,
+
+    }
+    console.log(ADOOpts)
+    console.log(statsOpts);
+    //console.log(ADOOpts)
+    //console.log(velocityOpts)
+    let  ADOTools = ADOModule(ADOOpts);
+    let results = await ADOTools.codeStats(statsOpts)
+    console.table(results.flat())
 }
 
 
