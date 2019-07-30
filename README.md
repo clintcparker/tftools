@@ -1,6 +1,8 @@
+# tftools
+
 [![Build Status](https://travis-ci.org/clintcparker/tftools.svg?branch=master)](https://travis-ci.org/clintcparker/tftools)
 
-### Getting setup for now
+## Installation
 
 from a new directory
 `npm install tftools`
@@ -11,12 +13,13 @@ or for the global CLI
 including the reference 
 `const ADOToolsModule = require(“tftools”)`
 
-### Example
+## Example
+
 Example for getting the velocities for all teams in a project:
 
 Make a file with this contents in the new directory:
 
-```
+```js
 var tfsOpts = {
    ADO_HOST            : “YOUR DOMAIN”, //your domain for ADO, ex: https://fabrikam.visualstudio.com
 }

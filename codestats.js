@@ -11,6 +11,8 @@ const statsModule = function(tfsOpts) {
     const asyncPool = require('tiny-async-pool')
     const expandHomeDir = require('expand-home-dir')
 
+
+
     async function getBuildDefs(statsOpts){
         expand(statsOpts);
         var repos = await getFilesInDir(statsOpts.Directory);
@@ -87,7 +89,7 @@ const statsModule = function(tfsOpts) {
 
 
             try {
-                if (getVSTSStats || getCLOC || getTests){
+                if (getVSTSStats || getCLOC || getTests || statsOpts.build){
                     await fs.mkdir(outputDirectory, async function(err, data1){
                         console.log(err);
                         console.log(data1);
@@ -175,6 +177,13 @@ const statsModule = function(tfsOpts) {
             let hash = await getHash(TOP_DIRECTORY,repo,dateStr)
             let grep_tests = 0;
             let clocResults;
+            if (statsOpts.build){
+                let gitConfigFile = path.join(TOP_DIRECTORY,repo,".git","config");
+                //console.log(gitConfigFile);
+                let remote = await getRemoteFromFile(gitConfigFile);
+                let info = await getRepoInfoFromRemoteUrl(remote);
+                await buildModule.queueBuildForRepo(info,hash,branchName);
+            }
             if(getCLOC)
             {
                 clocResults= await clocRepo(filename,path.join(TOP_DIRECTORY,repo),hash,statsOpts);

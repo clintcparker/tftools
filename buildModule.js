@@ -389,7 +389,8 @@ const buildModule = function(tfsOpts) {
         queueBuilds:queueBuilds,
         getBuildDefinitionForRepo:getBuildDefinitionForRepo,
         getLatestBuildForRepo:getLatestBuildForRepo,
-        getLatestBuildSource:getLatestBuildSource
+        getLatestBuildSource:getLatestBuildSource,
+        queueBuildForRepo:queueBuildForRepo
     }
 }
 module.exports = buildModule;
