@@ -6,8 +6,8 @@ const buildModule = function(tfsOpts) {
     const path = require("path");
     const git = require("simple-git")();
     const { parse } = require('json2csv');
-    const https = require("https")
-    const asyncPool  = require("tiny-async-pool")
+    const https = require("https");
+    const asyncPool  = require("tiny-async-pool");
 
 
     async function queueBuildForDate(TOP_DIRECTORY,dateStr,repo){
@@ -21,7 +21,7 @@ const buildModule = function(tfsOpts) {
         await git.status(function(err,status){
             branchName = status.current;
         });
-        var logOpts = {"--max-count":"1", "--before":`"${dateStr}"`}
+        var logOpts = {"--max-count":"1", "--before":`"${dateStr}"`};
         var hash = "";
         await git.log(logOpts, function(err, logs){
             //"21ecc43d801828678e97396239df25050fc9902e"   data2.latest.hash
@@ -29,12 +29,12 @@ const buildModule = function(tfsOpts) {
             if(logs.latest){
                 hash = logs.latest.hash;
             }
-        })
+        });
         if(hash){
             var buildId = await queueBuildForRepo(repoInfo,hash, branchName);
             var repoResult = {
                 buildId: buildId,
-            }
+            };
         }
         return  repoResult;
     }
@@ -43,7 +43,7 @@ const buildModule = function(tfsOpts) {
         return new Promise(async resolve => {
             await fs.readdir(TOP_DIRECTORY, async function(err,repos){
                 resolve(repos.filter(x=>x!=".DS_Store"));
-            })
+            });
         });
     }
 
@@ -58,17 +58,17 @@ const buildModule = function(tfsOpts) {
                 buildOpts[propName] = expanded;
             }
         }
-        const results = []
+        const results = [];
         var endDate = buildOpts.endDate;
         var dateStr = buildDateStringForGit(endDate);
-        var TOP_DIRECTORY = buildOpts.Directory
+        var TOP_DIRECTORY = buildOpts.Directory;
 
 
 
         try {
             var repos =  await getFilesInDir(TOP_DIRECTORY);
             let results = await asyncPool(1, repos, repo => {
-                return queueBuildForDate(TOP_DIRECTORY,dateStr,repo)
+                return queueBuildForDate(TOP_DIRECTORY,dateStr,repo);
             });
             console.table(results);
         }
@@ -99,8 +99,8 @@ const buildModule = function(tfsOpts) {
             method: 'POST',
         };
         options.headers=tfsUtils.buildHeaders(tfsOpts.PAT,options.host);
-        options.headers["Content-Type"]='application/json'
-        options.headers["Content-Length"]=Buffer.byteLength(body)
+        options.headers["Content-Type"]='application/json';
+        options.headers["Content-Length"]=Buffer.byteLength(body);
         options.url = `${options.host}${options.path}`;
         return new Promise ((resolve,reject)=>{
             var req = https.request(options,(res)=>{
@@ -108,22 +108,22 @@ const buildModule = function(tfsOpts) {
                 res.on("end",function(){
                     //console.log('ended');
                     resolve(JSON.parse(message));
-                })
+                });
                 //res.setEncoding('utf8');
                 res.on('data', function (chunk) {
                     //console.log('Response: ' + chunk);
                     message += chunk;
                 });
 
-            })
+            });
             req.write(body);
             req.end();
-        })
+        });
     }
 
     async function queueBuildForRepo(repoInfo,hash,branch){
         var buildDef = await getBuildDefinitionForRepo(repoInfo);
-        var buildId = await queueBuild(repoInfo,hash,buildDef,branch)
+        var buildId = await queueBuild(repoInfo,hash,buildDef,branch);
         return buildId;
     }
 
@@ -166,7 +166,7 @@ const buildModule = function(tfsOpts) {
     }
 
     async function getBuildDefinitionForRepo(repo){
-        var buildDefs = await getBuildDefs(repo.id,repo.project)
+        var buildDefs = await getBuildDefs(repo.id,repo.project);
         var gated = buildDefs.find(x=>x.name.toLowerCase().includes("gated"));
         var sonar = buildDefs.find(x=>x.name.toLowerCase().includes("sonar"));
         var buildDef = buildDefs[0];
@@ -187,13 +187,13 @@ const buildModule = function(tfsOpts) {
                 var isGood = build.result.toLowerCase().includes("succeeded");
                 return (isGated || isSonar) && isGood  && (build.sourceVersion == hash);
             } catch (err){
-                return false
+                return false;
             }
         }
         // var buildDefs = await getBuildDefs(repo.id,repo.project, endDate)
         // var gated = buildDefs.find(x=>x.name.includes("gated"));
         // var sonar = buildDefs.find(x=>x.name.includes("sonar"));
-        var buildDef = await getBuildDefinitionForRepo(repo)
+        var buildDef = await getBuildDefinitionForRepo(repo);
         // if(gated
         //     buildDef = gated;
         // }
@@ -212,7 +212,7 @@ const buildModule = function(tfsOpts) {
             "sourceVersion":`${hash}`,
         };
         if(buildDef){
-            queryParameters.definitions = buildDef.id
+            queryParameters.definitions = buildDef.id;
         }
         var path= `/${repo.project}${tfsOpts.BUILD_API_PATH}&${querystring.stringify(queryParameters)}`;
         var url = `${tfsOpts.ADO_HOST}${path}`;
@@ -220,7 +220,7 @@ const buildModule = function(tfsOpts) {
         var buildData;
         var buildArr = buildResponse.value;
         if(buildResponse.count > 0){
-            buildData = buildArr.find(isValidBuild)
+            buildData = buildArr.find(isValidBuild);
 
             if(buildData == undefined)
             {
@@ -231,8 +231,8 @@ const buildModule = function(tfsOpts) {
         {
             debugger;
         }
-        var id = buildData ? buildData.id: ""
-        var uri = buildData ? buildData.uri:""
+        var id = buildData ? buildData.id: "";
+        var uri = buildData ? buildData.uri:"";
         return {id:id,url:url,uri:uri};
     }
 
@@ -241,7 +241,7 @@ const buildModule = function(tfsOpts) {
         // var buildDefs = await getBuildDefs(repo.id,repo.project, endDate)
         // var gated = buildDefs.find(x=>x.name.includes("gated"));
         // var sonar = buildDefs.find(x=>x.name.includes("sonar"));
-        var buildDef = await getBuildDefinitionForRepo(repo)
+        var buildDef = await getBuildDefinitionForRepo(repo);
         // if(gated){
         //     buildDef = gated;
         // }
@@ -259,7 +259,7 @@ const buildModule = function(tfsOpts) {
             "minTime" : buildDateString(endDate)
         };
         if(buildDef){
-            queryParameters.definitions = buildDef.id
+            queryParameters.definitions = buildDef.id;
         }
         var path= `/${repo.project}${tfsOpts.BUILD_API_PATH}&${querystring.stringify(queryParameters)}`;
         var url = `${tfsOpts.ADO_HOST}${path}`;
@@ -267,7 +267,7 @@ const buildModule = function(tfsOpts) {
         var buildData;
         var buildArr = buildResponse.value;
         if(buildResponse.count > 0){
-            buildData = buildArr.find(isValidBuild)
+            buildData = buildArr.find(isValidBuild);
 
             if(buildData == undefined)
             {
@@ -278,8 +278,8 @@ const buildModule = function(tfsOpts) {
         {
             debugger;
         }
-        var id = buildData ? buildData.id: ""
-        var uri = buildData ? buildData.uri:""
+        var id = buildData ? buildData.id: "";
+        var uri = buildData ? buildData.uri:"";
         return {id:id,url:url,uri:uri};
     }
 
@@ -290,7 +290,7 @@ const buildModule = function(tfsOpts) {
     async function getCoverageForBuild(buildId, project){
         const queryParameters = {
             "buildId" : buildId
-        }
+        };
         var path = `/${project}${tfsOpts.COVERAGE_API_PATH}&${querystring.stringify(queryParameters)}`;
         var coverageResponse = await tfsUtils.ADORequest(path);
         var coverage =coverageResponse.coverageData[0];
@@ -304,8 +304,8 @@ const buildModule = function(tfsOpts) {
         const queryParameters = {
             "buildUri" : uri,   
         };
-        var path = `/${project}${tfsOpts.TEST_API_PATH}&${querystring.stringify(queryParameters)}`
-        var testRunResponse = await tfsUtils.ADORequest(path)
+        var path = `/${project}${tfsOpts.TEST_API_PATH}&${querystring.stringify(queryParameters)}`;
+        var testRunResponse = await tfsUtils.ADORequest(path);
         var testRuns =testRunResponse.value;
         if (testRuns && testRuns.length > 0){
             var testRunData = getTestRunData(testRuns);
@@ -391,6 +391,6 @@ const buildModule = function(tfsOpts) {
         getLatestBuildForRepo:getLatestBuildForRepo,
         getLatestBuildSource:getLatestBuildSource,
         queueBuildForRepo:queueBuildForRepo
-    }
-}
+    };
+};
 module.exports = buildModule;

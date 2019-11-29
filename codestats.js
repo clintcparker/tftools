@@ -8,15 +8,15 @@ const statsModule = function(tfsOpts) {
     const path = require("path");
     const git = require("simple-git")();
     const { parse } = require('json2csv');
-    const asyncPool = require('tiny-async-pool')
-    const expandHomeDir = require('expand-home-dir')
+    const asyncPool = require('tiny-async-pool');
+    const expandHomeDir = require('expand-home-dir');
 
 
 
     async function getBuildDefs(statsOpts){
         expand(statsOpts);
         var repos = await getFilesInDir(statsOpts.Directory);
-        return  getBuildDefsForRepos(repos,statsOpts.Directory)
+        return  getBuildDefsForRepos(repos,statsOpts.Directory);
     }
 
     async function calcStats(statsOpts){
@@ -33,7 +33,7 @@ const statsModule = function(tfsOpts) {
 
     function getCodeStatForDate(opts){
         return new Promise(async resolve => {
-            let  results =  await  calcStatsForDate(opts)
+            let  results =  await  calcStatsForDate(opts);
             resolve(results);
         });
     }
@@ -41,7 +41,7 @@ const statsModule = function(tfsOpts) {
     async function getBuildDefsForRepos(repos,TOP_DIRECTORY){
         return new Promise(async resolve => {
             let results = await asyncPool(5, repos, repo => {
-                return getBuildDefinitionForRepo(repo,TOP_DIRECTORY)
+                return getBuildDefinitionForRepo(repo,TOP_DIRECTORY);
             });
             resolve(results);
         });
@@ -52,7 +52,7 @@ const statsModule = function(tfsOpts) {
         //console.log(gitConfigFile);
         let remote = await getRemoteFromFile(gitConfigFile);
         let info = await getRepoInfoFromRemoteUrl(remote);
-        return  buildModule.getBuildDefinitionForRepo(info)
+        return  buildModule.getBuildDefinitionForRepo(info);
     }
 
     function expand(incomingOpts){
@@ -79,9 +79,9 @@ const statsModule = function(tfsOpts) {
             const ROLLUP_BU = path.basename(statsOpts.Directory);
             var endDate = statsOpts.EndDate;
             var dateStr = buildDateStringForGit(endDate);
-            var TOP_DIRECTORY = statsOpts.Directory
-            var outputDirectory = path.join(statsOpts.outputDirectory,`${ROLLUP_BU} ${dateStr}`)
-            var resultFile = `${ROLLUP_BU}-${buildDateString(endDate)}.csv`
+            var TOP_DIRECTORY = statsOpts.Directory;
+            var outputDirectory = path.join(statsOpts.outputDirectory,`${ROLLUP_BU} ${dateStr}`);
+            var resultFile = `${ROLLUP_BU}-${buildDateString(endDate)}.csv`;
 
             var getVSTSStats = statsOpts.VSTS;
             var getCLOC = statsOpts.CLOC;
@@ -96,14 +96,14 @@ const statsModule = function(tfsOpts) {
 
                     });
                     var repos = await getFilesInDir(TOP_DIRECTORY);
-                    let results = await getStatsForRepos(repos,TOP_DIRECTORY,outputDirectory,dateStr,getCLOC,getVSTSStats,getTests,resultFile,statsOpts)
+                    let results = await getStatsForRepos(repos,TOP_DIRECTORY,outputDirectory,dateStr,getCLOC,getVSTSStats,getTests,resultFile,statsOpts);
                     //return results;
                     resolve(results);
                 }
             }
             catch (err){
                 console.log(err);
-                reject(err)
+                reject(err);
             }
         });
     }
@@ -113,7 +113,7 @@ const statsModule = function(tfsOpts) {
             await fs.readdir(TOP_DIRECTORY, async function(err,repos){
                 
                 resolve(repos.filter(x=>x!=".DS_Store"));
-            })
+            });
         });
     }
 
@@ -121,12 +121,12 @@ const statsModule = function(tfsOpts) {
     async function getStatsForRepos(repos,TOP_DIRECTORY,outputDirectory,dateStr,getCLOC,getVSTSStats,getTests,resultFile,statsOpts){
         return new Promise(async resolve => {
             let results = await asyncPool(6, repos, repo => {
-                return getStatsForRepo(repo, TOP_DIRECTORY,outputDirectory,dateStr,getCLOC,getVSTSStats,getTests,Object.assign({},statsOpts))
+                return getStatsForRepo(repo, TOP_DIRECTORY,outputDirectory,dateStr,getCLOC,getVSTSStats,getTests,Object.assign({},statsOpts));
             });
 
             if (getCLOC)
             {
-                var {stdout, stderr} = await exec(`ls`,{"cwd":`${outputDirectory}`})
+                var {stdout, stderr} = await exec(`ls`,{"cwd":`${outputDirectory}`});
                 var ls = stdout.replace(/\n/g, " ");
                 var {stdout, stderr} = await exec(`cloc --sum-reports --out="${path.join(outputDirectory,"totals")}" ${ls}`,{"cwd":`${outputDirectory}`});
                 var {stdout, stderr} = await exec(`cloc --csv --sum-reports --out="${path.join(outputDirectory,"totals-csv")}" ${ls}`,{"cwd":`${outputDirectory}`});
@@ -135,7 +135,7 @@ const statsModule = function(tfsOpts) {
                 var repositories = clocJSON[1];
 
                 for (var i in results){
-                    let result = results[i]
+                    let result = results[i];
                     let repo = repositories[result.repo];
                     if (repo){
                         result.nFiles = repo.nFiles;
@@ -151,7 +151,7 @@ const statsModule = function(tfsOpts) {
                 (err) => err ? console.error('CSV not written!' , err) : console.log(`CSV written!`)
             );
             resolve(results);
-        })
+        });
     }
     
 
@@ -162,7 +162,7 @@ const statsModule = function(tfsOpts) {
         return new Promise( async resolve => {
             var repoResult = {
                 repo: repo,
-            }
+            };
             
             var filename = path.join(outputDirectory,repo);
             await git.cwd(path.join(TOP_DIRECTORY,repo));
@@ -174,7 +174,7 @@ const statsModule = function(tfsOpts) {
             await git.status(function(err,status){
                 branchName = status.current;
             });
-            let hash = await getHash(TOP_DIRECTORY,repo,dateStr)
+            let hash = await getHash(TOP_DIRECTORY,repo,dateStr);
             let grep_tests = 0;
             let clocResults;
             if (statsOpts.build){
@@ -189,16 +189,16 @@ const statsModule = function(tfsOpts) {
                 clocResults= await clocRepo(filename,path.join(TOP_DIRECTORY,repo),hash,statsOpts);
             }
             if(getVSTSStats){
-                var vstsStats = await getVSTSStatsForRepo(TOP_DIRECTORY,repo,hash,branchName)
+                var vstsStats = await getVSTSStatsForRepo(TOP_DIRECTORY,repo,hash,branchName);
             }
                 
             if(getTests){
                 if(hash != ""){
                     await git.checkout(`${hash}`);
-                    var testCommand = `grep -Eo -r -i "\\s*\\[(Fact|TestMethod|Theory).*" ${path.join(TOP_DIRECTORY,repo,"*")} | wc -l`
+                    var testCommand = `grep -Eo -r -i "\\s*\\[(Fact|TestMethod|Theory).*" ${path.join(TOP_DIRECTORY,repo,"*")} | wc -l`;
                     var { stdout, stderr } = await exec(testCommand);
                     //console.log(stdout);
-                    grep_tests = await parseInt(stdout,10)
+                    grep_tests = await parseInt(stdout,10);
                     //console.log(grep_tests);
                     await git.checkout(branchName);
                 }
@@ -248,7 +248,7 @@ const statsModule = function(tfsOpts) {
                 let remote = await getRemoteFromFile(gitConfigFile);
                 let info = await getRepoInfoFromRemoteUrl(remote);
                 let project = info.project;
-                let buildInfo = await buildModule.getLatestBuildSource(info,hash, branchName)
+                let buildInfo = await buildModule.getLatestBuildSource(info,hash, branchName);
                 //var buildInfo = await getLatestBuildForRepo(info, addDays(endDate,-7));
                 let build = buildInfo.id;
                 if(build) {
@@ -258,7 +258,7 @@ const statsModule = function(tfsOpts) {
                 resolve ({tests:tests,coverage:coverage,buildInfo:buildInfo});
             });
         } else {
-            return {tests:tests,coverage:coverage,buildInfo:{url:"no build"}}
+            return {tests:tests,coverage:coverage,buildInfo:{url:"no build"}};
         }
     }
 
@@ -266,27 +266,27 @@ const statsModule = function(tfsOpts) {
         if(hash != ""){
             return new Promise( async resolve => {
                 //var cloc_command_args = `cloc --out="${filename}"  --include-lang="C#,Razor,ASP,ASP.NET,HTML,CSS,LESS,PowerShell,JavaScript,TypeScript" ${path.join(TOP_DIRECTORY,repo)}`
-                let  cloc_command_include_lang = {}
-                let cloc_command_exclude_dir = {}
+                let  cloc_command_include_lang = {};
+                let cloc_command_exclude_dir = {};
                 let  cloc_command_out = {
                     "out" : `"${filename}"`,
-                }
+                };
                 if (statsOpts.langFilters) {
                     cloc_command_include_lang = {
                         "include-lang":`"${statsOpts.langFilters.join(",")}"`,
-                    }
+                    };
                 }
                 if (statsOpts.excludeDirs){
                     cloc_command_exclude_dir = {
                         "exclude-dir":`"${statsOpts.excludeDirs.join(",")}"`,
-                    }
+                    };
                 }
-                let clocCommandObj = {}
-                Object.assign(clocCommandObj,cloc_command_out,cloc_command_include_lang,cloc_command_exclude_dir)
-                let  clocCommandArr = []
+                let clocCommandObj = {};
+                Object.assign(clocCommandObj,cloc_command_out,cloc_command_include_lang,cloc_command_exclude_dir);
+                let  clocCommandArr = [];
                 for (var propName in clocCommandObj) {
                     let prop = clocCommandObj[propName] + "";
-                    clocCommandArr.push(`--${propName}=${prop}`)
+                    clocCommandArr.push(`--${propName}=${prop}`);
                     if ((prop + "").startsWith("~")){
                         let expanded = expandHomeDir(prop);
                         clocCommandObj[propName] = expanded;
@@ -294,7 +294,7 @@ const statsModule = function(tfsOpts) {
                 }
                 let cloc_command_args = clocCommandArr.join("  ");
 
-                let cloc_command = `cloc ${cloc_command_args} ${hash}`
+                let cloc_command = `cloc ${cloc_command_args} ${hash}`;
 
                 var { stdout, stderr } = await exec(cloc_command,{"cwd":`${dirPath}`});
                 resolve (stdout);
@@ -317,7 +317,7 @@ const statsModule = function(tfsOpts) {
     }
 
     async function getHash(TOP_DIRECTORY,repo,dateStr){
-        const logOpts = {"--max-count":"1", "--before":`"${dateStr}"`}
+        const logOpts = {"--max-count":"1", "--before":`"${dateStr}"`};
         return new Promise( async resolve => {
             await git.cwd(path.join(TOP_DIRECTORY,repo)).log(logOpts, function(err, logs){
                 let hash ="";
@@ -328,8 +328,8 @@ const statsModule = function(tfsOpts) {
                 }
 
                 resolve(hash);
-            })
-        })
+            });
+        });
     }
 
     async function getRepoInfoFromRemoteUrl(remoteUrl){
@@ -353,7 +353,7 @@ const statsModule = function(tfsOpts) {
     async function getCoverageForBuild(buildId, project){
         const queryParameters = {
             "buildId" : buildId
-        }
+        };
         var path = `/${project}${tfsOpts.COVERAGE_API_PATH}&${querystring.stringify(queryParameters)}`;
         var coverageResponse = await tfsUtils.ADORequest(path);
         var coverage =coverageResponse.coverageData[0];
@@ -367,8 +367,8 @@ const statsModule = function(tfsOpts) {
         const queryParameters = {
             "buildUri" : uri,   
         };
-        var path = `/${project}${tfsOpts.TEST_API_PATH}&${querystring.stringify(queryParameters)}`
-        var testRunResponse = await tfsUtils.ADORequest(path)
+        var path = `/${project}${tfsOpts.TEST_API_PATH}&${querystring.stringify(queryParameters)}`;
+        var testRunResponse = await tfsUtils.ADORequest(path);
         var testRuns =testRunResponse.value;
         if (testRuns && testRuns.length > 0){
             var testRunData = getTestRunData(testRuns);
@@ -451,6 +451,6 @@ const statsModule = function(tfsOpts) {
     return {
         calcStats:calcStats,
         getBuildDefs:getBuildDefs
-    }
-}
+    };
+};
 module.exports = statsModule;

@@ -46,7 +46,7 @@ module.exports = function(opts){
     }
 
     //for each property in opts
-    // if property contains/starts wiht ~
+    // if property contains/starts with ~
     // expand it and replace
     for (var propName in tfsOpts) {
         let prop = tfsOpts[propName] + "";
@@ -78,4 +78,4 @@ module.exports = function(opts){
         defaultLangs    : defaultLangs,
         velocityFields  : velocitiesModule.velocityFields
     };
-}
+};
