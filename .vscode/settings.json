@@ -4,10 +4,14 @@
         "WORKITEM",
         "WORKITEMS",
         "cloc",
+        "codestats",
         "groupby",
+        "newyears",
         "odata",
+        "processconfiguration",
         "promisify",
         "tfsgit",
+        "tftools",
         "unanalyzed",
         "vsts"
     ]

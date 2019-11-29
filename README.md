@@ -10,7 +10,7 @@ from a new directory
 or for the global CLI
 `npm install -g tftools`
 
-including the reference 
+including the reference
 `const ADOToolsModule = require(“tftools”)`
 
 ## Example

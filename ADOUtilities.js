@@ -5,7 +5,7 @@ const tfsUtilsModule = function(tfsOpts) {
     });
     //#endregion node modules
     const https = require('https');
-    const querystring = require('querystring')
+    const querystring = require('querystring');
 
     const REPO_API_PATH = "/_apis/git/repositories?api-version=5.0";
     const BUILD_API_PATH = "/_apis/build/builds?api-version=5.0";
@@ -21,19 +21,19 @@ const tfsUtilsModule = function(tfsOpts) {
     var lastBackOff =0;
     var backOffs = {};
     function buildHeaders(PAT,host){
-        var h = host.replace(/http(s)*:(\/)+/,"")
+        var h = host.replace(/http(s)*:(\/)+/,"");
         return {
             'Authorization': 'Basic ' + Buffer.from("" + ':' + PAT).toString('base64'),
             'Accept' : "application/json,text/html",
             'Host': `${h}`,
             'Upgrade-Insecure-Requests': '1'
-        }   
+        };   
     }
 
     function retryFunction(incomingHttpMessage){
-        var bad = incomingHttpMessage.statusMessage !== 'OK'
+        var bad = incomingHttpMessage.statusMessage !== 'OK';
         var backOff = 0;
-        var lastBackOff = backOffs[incomingHttpMessage.host] ? backOffs[incomingHttpMessage.host] : 0
+        var lastBackOff = backOffs[incomingHttpMessage.host] ? backOffs[incomingHttpMessage.host] : 0;
         if(lastBackOff != 0 || bad){
             backOff = lastBackOff != 0 ? (Date.now() - lastBackOff)/1000 : 0;
             console.log(`${incomingHttpMessage.statusCode}   +${backOff}s`);
@@ -69,16 +69,16 @@ const tfsUtilsModule = function(tfsOpts) {
             request(options,opts,function(error, response, body){
                 if(error){
                     reject(`${path}  ${error}`);
-                    return
+                    return;
                 }
                 if(response.statusCode>=400)
                 {
                     reject(`${path}  ${body}`);
-                    return
+                    return;
                 }
-                var data = JSON.parse(body)
+                var data = JSON.parse(body);
                 resolve(data);
-            })
+            });
         });
     }
 
@@ -86,17 +86,17 @@ const tfsUtilsModule = function(tfsOpts) {
         function requestCallbackInner(error, response, body){
             if(error){
                 reject(`${path}  ${error}`);
-                return
+                return;
             }
             if(response.statusCode>=400)
             {
                 reject(`${path}  ${body}`);
-                return
+                return;
             }
-            var data = JSON.parse(body)
+            var data = JSON.parse(body);
             resolve(data);
         };
-        return requestCallbackInner
+        return requestCallbackInner;
     }
 
     var analyticsLastBackOff =0;
@@ -121,16 +121,16 @@ const tfsUtilsModule = function(tfsOpts) {
             request(options,opts,function(error, response, body){
                 if(error){
                     reject(`${path}  ${error}`);
-                    return
+                    return;
                 }
                 if(response.statusCode>=400)
                 {
                     reject(`${path}  ${body}`);
-                    return
+                    return;
                 }
-                var data = JSON.parse(body)
+                var data = JSON.parse(body);
                 resolve(data);
-            })
+            });
         });
     }
 
@@ -149,8 +149,8 @@ const tfsUtilsModule = function(tfsOpts) {
     }
 
     function buildDateStringForAnalytics(dateStr,plusDays){
-        let timePart = dateStr.replace(/\d{4}-\d{2}-\d{2}T/,"T")
-        let dateIn = new Date(dateStr)
+        let timePart = dateStr.replace(/\d{4}-\d{2}-\d{2}T/,"T");
+        let dateIn = new Date(dateStr);
         var date = addDays(dateIn,plusDays);
         let ISOString = date.toISOString();
         let stringForAnalytics = ISOString.replace(/T.*$/,"");
@@ -170,7 +170,7 @@ const tfsUtilsModule = function(tfsOpts) {
             // //"reasonFilter":"pullRequest",
             // "minTime" : buildDateString(endDate)
         };
-        var proj = "0fa9dfee-f92d-4a1b-9d77-071a4f54265a"
+        var proj = "0fa9dfee-f92d-4a1b-9d77-071a4f54265a";
         var path= `/${proj}${tfsOpts.BUILD_API_PATH}&${querystring.stringify(queryParameters)}`;
         //for merchant data importer
         var body = JSON.stringify({
@@ -199,24 +199,24 @@ const tfsUtilsModule = function(tfsOpts) {
             method: 'POST',
         };
         options.headers=buildHeaders(tfsOpts.PAT,options.host);
-        options.headers["Content-Type"]='application/json'
-        options.headers["Content-Length"]=Buffer.byteLength(body)
+        options.headers["Content-Type"]='application/json';
+        options.headers["Content-Length"]=Buffer.byteLength(body);
         options.url = `${options.host}${options.path}`;
         return new Promise ((resolve,reject)=>{
             var req = https.request(options,(res)=>{
                 res.on("end",function(){
                     console.log('ended');
                     resolve(res);
-                })
+                });
                 //res.setEncoding('utf8');
                 res.on('data', function (chunk) {
                     console.log('Response: ' + chunk);
                 });
 
-            })
+            });
             req.write(body);
             req.end();
-        })
+        });
     }
 
 
@@ -238,7 +238,7 @@ const tfsUtilsModule = function(tfsOpts) {
         buildHeaders: buildHeaders,
         addDays:addDays
     };
-}
+};
 
 
 

@@ -4,9 +4,9 @@ const git = require("simple-git")();
 const request = require('retry-request', {
     request: require('request')
 });
-const path = require("path")
-const rimraf = require("rimraf")
-const asyncPool = require("tiny-async-pool")
+const path = require("path");
+const rimraf = require("rimraf");
+const asyncPool = require("tiny-async-pool");
 
 const initializerModule = function(tfsOpts) {
     //#endregion node modules
@@ -14,7 +14,7 @@ const initializerModule = function(tfsOpts) {
 
     async function initialize(opts) {
         //for each property in opts
-        // if property contains/starts wiht ~
+        // if property contains/starts with ~
         // expand it and replace
         for (var propName in opts) {
             let prop = opts[propName] + "";
@@ -30,18 +30,18 @@ const initializerModule = function(tfsOpts) {
                 console.log(err);
             });    
 
-            let pattern = /([rR]elease|[Ee]nvironment)/
+            let pattern = /([rR]elease|[Ee]nvironment)/;
             var ADORepos =  await tfsUtils.getRepos();
             var filtered = ADORepos.filter(
                 x=>repoList.some(
                     y=> x.name == y && !x.remoteUrl.match(pattern)
                 )
-            )
+            );
             git.cwd(`${opts.TOP_DIRECTORY}/`);
             let removals = await asyncPool(1,filtered,repo=>{
                 
-                return rmAndClone(path.join(opts.TOP_DIRECTORY,repo.name),repo.remoteUrl)
-            })
+                return rmAndClone(path.join(opts.TOP_DIRECTORY,repo.name),repo.remoteUrl);
+            });
             
         }
         catch (err){
@@ -51,7 +51,7 @@ const initializerModule = function(tfsOpts) {
     };
 
     return {initialize:initialize};
-}
+};
 
 
 async function rmAndClone(dirPath, remote)
@@ -83,16 +83,16 @@ async function analyticsRequest(path)
             request(options,opts,function(error, response, body){
                 if(error){
                     reject(`${path}  ${error}`);
-                    return
+                    return;
                 }
                 if(response.statusCode>=400)
                 {
                     reject(`${path}  ${body}`);
-                    return
+                    return;
                 }
-                var data = JSON.parse(body)
+                var data = JSON.parse(body);
                 resolve(data);
-            })
+            });
         });
     }
 

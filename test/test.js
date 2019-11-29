@@ -2,7 +2,7 @@
 const assert = require('chai').assert;
 const ADOUtilsModule = require("../ADOUtilities");
 const basicADOUtility = ADOUtilsModule({});
-describe('ADOUtilites', function() {
+describe('ADOUtilities', function() {
   describe('#buildDateStringForAnalytics()', function() {
     it('should change year on newyears', function() {
       assert.equal(basicADOUtility.buildDateStringForAnalytics('2018-12-31T00:00:00-04:00',1),'2019-01-01T00:00:00-04:00');
