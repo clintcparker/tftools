@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 var program = require("commander");
-const ADOModule = require("./index.js");
+const ADOModule = require("../built/index.js");
 const nodeOs = require("os");
 const nodePath = require("path");
-const thisPackage = require("./package");
+const thisPackage = require("../package");
 
 var logger = new function() {
     this.showLogs = true;
