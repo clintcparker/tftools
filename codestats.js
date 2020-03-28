@@ -248,6 +248,7 @@ const statsModule = function(tfsOpts) {
                 let remote = await getRemoteFromFile(gitConfigFile);
                 let info = await getRepoInfoFromRemoteUrl(remote);
                 let project = info.project;
+                info.name = repo;
                 let buildInfo = await buildModule.getLatestBuildSource(info,hash, branchName);
                 //var buildInfo = await getLatestBuildForRepo(info, addDays(endDate,-7));
                 let build = buildInfo.id;

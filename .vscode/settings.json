@@ -14,5 +14,26 @@
         "tftools",
         "unanalyzed",
         "vsts"
-    ]
+    ],
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#a13bc3",
+        "activityBar.activeBackground": "#a13bc3",
+        "activityBar.activeBorder": "#493d16",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#493d16",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "titleBar.activeBackground": "#812f9c",
+        "titleBar.inactiveBackground": "#812f9c99",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveForeground": "#e7e7e799",
+        "statusBar.background": "#812f9c",
+        "statusBarItem.hoverBackground": "#a13bc3",
+        "statusBar.foreground": "#e7e7e7",
+        "panel.border": "#a13bc3",
+        "sideBar.border": "#a13bc3",
+        "editorGroup.border": "#a13bc3",
+        "tab.activeBorder": "#a13bc3"
+    },
+    "peacock.color": "#812f9c"
 }

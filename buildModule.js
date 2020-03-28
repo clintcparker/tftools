@@ -157,7 +157,7 @@ const buildModule = function(tfsOpts) {
             //"resultFilter" : "partiallySucceeded",
             "repositoryId" : repositoryId,
             "repositoryType" : "tfsgit",
-            "builtAfter" :  buildDateString(addDays(new Date(Date.now()),-20)),
+            "builtAfter" :  buildDateString(addDays(new Date(Date.now()),-40)),
         };
         var path= `/${project}${tfsOpts.DEFINITIONS_API_PATH}&${querystring.stringify(queryParameters)}`;
         var url = `${tfsOpts.ADO_HOST}${path}`;
@@ -201,7 +201,7 @@ const buildModule = function(tfsOpts) {
         //     buildDef = sonar;
         // }
         const queryParameters = {
-            "$top" : "3",
+            "$top" : "15",
             //"resultFilter" : "succeeded",
             //"resultFilter" : "partiallySucceeded",
             "repositoryId" : repo.id,
