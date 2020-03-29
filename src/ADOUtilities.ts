@@ -1,11 +1,12 @@
-"use strict";
-const tfsUtilsModule = function(tfsOpts) {
-    const request = require('retry-request', {
-        request: require('request')
-    });
+function tfsUtilsModule(tfsOpts) {
+    import request = require('retry-request'
+    // , {
+    //     request: require('request')
+    // }
+    );
     //#endregion node modules
-    const https = require('https');
-    const querystring = require('querystring');
+    import * as https from 'https';
+    import querystring = require('querystring');
 
     const REPO_API_PATH = "/_apis/git/repositories?api-version=5.0";
     const BUILD_API_PATH = "/_apis/build/builds?api-version=5.0";
@@ -241,5 +242,4 @@ const tfsUtilsModule = function(tfsOpts) {
 };
 
 
-
-module.exports = tfsUtilsModule;
+export = tfsUtilsModule;

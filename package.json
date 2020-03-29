@@ -12,21 +12,23 @@
   "license": "ISC",
   "dependencies": {
     "azure-devops-node-api": "^9.0.1",
-    "commander": "^2.20.0",
+    "commander": "^2.20.3",
     "expand-home-dir": "0.0.3",
-    "json2csv": "^4.5.2",
-    "request": "^2.88.0",
-    "retry-request": "^4.1.1",
-    "rimraf": "^2.6.3",
-    "simple-git": "^1.120.0",
-    "tiny-async-pool": "^1.0.4"
+    "json2csv": "^4.5.4",
+    "request": "^2.88.2",
+    "rimraf": "^2.7.1",
+    "simple-git": "^1.132.0",
+    "tiny-async-pool": "^1.1.0"
   },
   "devDependencies": {
+    "@types/node": "^13.9.5",
     "chai": "^4.2.0",
     "intercept-stdout": "^0.1.2",
-    "mocha": "^6.1.4",
+    "mocha": "^6.2.3",
     "nyc": "^14.1.1",
-    "sinon": "^7.3.2",
-    "string-argv": "^0.3.0"
+    "retry-request": "^4.1.1",
+    "sinon": "^7.5.0",
+    "string-argv": "^0.3.1",
+    "typescript": "^3.8.3"
   }
 }

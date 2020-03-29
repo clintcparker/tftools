@@ -1,15 +1,18 @@
-const statsModule = function(tfsOpts) {
-    const tfsUtils = require("./ADOUtilities")(tfsOpts);
-    const buildModule = require("./buildModule")(tfsOpts);
-    const fs = require("fs");
-    const querystring = require('querystring');
-    const util = require('util');
-    const exec = util.promisify(require('child_process').exec);
-    const path = require("path");
-    const git = require("simple-git")();
-    const { parse } = require('json2csv');
-    const asyncPool = require('tiny-async-pool');
-    const expandHomeDir = require('expand-home-dir');
+function statsModule(tfsOpts) {
+    import tm = require("./ADOUtilities");
+    let tfsUtils = tm(tfsOpts);
+    import bm = require("./buildModule");
+    let buildModule = bm(tfsOpts);
+    import fs = require("fs");
+    import querystring = require('querystring');
+    import util = require('util');
+    let exec = util.promisify(require('child_process').exec);
+    import path = require("path");
+    import gitt = require("simple-git");
+    let git = gitt();
+    //import { parse } = require('json2csv');
+    import asyncPool = require('tiny-async-pool');
+    import expandHomeDir = require('expand-home-dir');
 
 
 
@@ -454,4 +457,5 @@ const statsModule = function(tfsOpts) {
         getBuildDefs:getBuildDefs
     };
 };
-module.exports = statsModule;
+
+export = statsModule;

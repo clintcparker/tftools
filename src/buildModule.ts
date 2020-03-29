@@ -1,13 +1,15 @@
-const buildModule = function(tfsOpts) {
-    const tfsUtils = require("./ADOUtilities")(tfsOpts);
-    const fs = require("fs");
-    const querystring = require('querystring');
-    const util = require('util');
-    const path = require("path");
-    const git = require("simple-git")();
-    const { parse } = require('json2csv');
-    const https = require("https");
-    const asyncPool  = require("tiny-async-pool");
+export function buildModule(tfsOpts) {
+    import tfu = require("./ADOUtilities");
+    let tfsUtils = tfu(tfsOpts);
+    import fs = require("fs");
+    import querystring = require('querystring');
+    import util = require('util');
+    import path = require("path");
+    import * as gitt from "simple-git";
+    let git = gitt();
+    import { parse } from 'json2csv';
+    import https = require("https");
+    import asyncPool  = require("tiny-async-pool");
 
 
     async function queueBuildForDate(TOP_DIRECTORY,dateStr,repo){
@@ -393,4 +395,4 @@ const buildModule = function(tfsOpts) {
         queueBuildForRepo:queueBuildForRepo
     };
 };
-module.exports = buildModule;
+//export = buildModule;r

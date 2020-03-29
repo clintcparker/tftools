@@ -1,15 +1,15 @@
-const velocitiesModule = function(tfsOpts) {
+function velocitiesModule(tfsOpts) {
     const ITERATIONS_PATH = "/_odata/v3.0-preview/Iterations";
     const TEAMS_PATH = "/_odata/v3.0-preview/Teams";
     const PROCESSES_PATH = "/_odata/v3.0-preview/Processes";
     const WORKITEMS_PATH = "/_odata/v3.0-preview/WorkItems";
     const WORKITEM_SNAPSHOT_PATH = "/_odata/v3.0-preview/WorkItemSnapshot";
-    const PROCESS_CONFIG_PATH = "/_apis/work/processconfiguration?api-version=5.0-preview.1"
-    const pathModule = require("path")
-    const fs = require('fs');
-    const { parse } = require('json2csv');
-    const querystring = require("querystring");
-    const asyncPool = require("tiny-async-pool")
+    const PROCESS_CONFIG_PATH = "/_apis/work/processconfiguration?api-version=5.0-preview.1";
+    import pathModule = require("path");
+    import fs = require('fs');
+    //import { parse } = require('json2csv');
+    import querystring = require("querystring");
+    import asyncPool = require("tiny-async-pool")
     let keepGoingTeams;
     let keepGoingIterations;
     let lastTeam;
@@ -340,5 +340,5 @@ const velocitiesModule = function(tfsOpts) {
 
 }
 
-module.exports = velocitiesModule;
+export = velocitiesModule;
 

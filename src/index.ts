@@ -1,5 +1,5 @@
-module.exports = function(opts){
-    expandHomeDir = require('expand-home-dir');
+export function foo(opts){
+    import * as expandHomeDir from 'expand-home-dir';
     var tfsOpts = {
         REPO_API_PATH       : "/_apis/git/repositories?api-version=5.0",
         BUILD_API_PATH      : "/_apis/build/builds?api-version=5.0",
@@ -57,11 +57,17 @@ module.exports = function(opts){
     }
         
 
-    const statsModule        = require('./codestats')(tfsOpts);
-    const initializerModule = require('./repo_initializer')(tfsOpts);
-    const velocitiesModule  = require('./velocities')(tfsOpts);
-    const utilsModule  = require('./ADOUtilities')(tfsOpts);
-    const buildModule  = require('./buildModule')(tfsOpts);
+    import sm        = require('./codestats');
+    import im = require('./repo_initializer');
+    import vm  = require('./velocities');
+    import um  = require('./ADOUtilities');
+    import bm  = require('./buildModule');
+    let statsModule = sm(tfsOpts);
+    let initializerModule = im(tfsOpts);
+    let velocitiesModule  = vm(tfsOpts);
+    let utilsModule  = um(tfsOpts);
+    let buildModule  = bm(tfsOpts);
+    
 
     const defaultLangs = {
         dotnet : ["C#","Razor","ASP","ASP.NET","HTML","CSS","LESS","PowerShell","JavaScript","TypeScript"],

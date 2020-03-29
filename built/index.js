@@ -1,5 +1,5 @@
-module.exports = function (opts) {
-    expandHomeDir = require('expand-home-dir');
+export function foo(opts) {
+    import * as expandHomeDir from 'expand-home-dir';
     var tfsOpts = {
         REPO_API_PATH: "/_apis/git/repositories?api-version=5.0",
         BUILD_API_PATH: "/_apis/build/builds?api-version=5.0",
@@ -11,12 +11,22 @@ module.exports = function (opts) {
         Object.assign(tfsOpts, opts);
     }
     if (tfsOpts.ADO_HOST == undefined) {
-        var ADO_HOST_MESSAGE = "The ADO_HOST property is required!\n        Ex: https://dev.azure.com/093231b1-334c-4cfc-abd8-882b7085\n        Ex: https://customsubdomain.visualstudio.com\n        \n        \n        ref: https://docs.microsoft.com/en-us/rest/api/azure/devops/\n        ";
+        const ADO_HOST_MESSAGE = `The ADO_HOST property is required!
+        Ex: https://dev.azure.com/093231b1-334c-4cfc-abd8-882b7085
+        Ex: https://customsubdomain.visualstudio.com
+        
+        
+        ref: https://docs.microsoft.com/en-us/rest/api/azure/devops/
+        `;
         console.error(ADO_HOST_MESSAGE);
         return;
     }
     if (tfsOpts.PAT == undefined) {
-        var PAT_MESSAGE = "The PAT property is required!\n        Ex: qaldqr4se5gs5g5h6limdfe53z6sbk2ipsylu776kahrotpevrmtatq\n\n        ref: https://docs.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/pats\n        ";
+        const PAT_MESSAGE = `The PAT property is required!
+        Ex: qaldqr4se5gs5g5h6limdfe53z6sbk2ipsylu776kahrotpevrmtatq
+
+        ref: https://docs.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/pats
+        `;
         console.error(PAT_MESSAGE);
         return;
     }
@@ -35,18 +45,23 @@ module.exports = function (opts) {
     // if property contains/starts with ~
     // expand it and replace
     for (var propName in tfsOpts) {
-        var prop = tfsOpts[propName] + "";
+        let prop = tfsOpts[propName] + "";
         if ((prop + "").startsWith("~")) {
-            var expanded = expandHomeDir(prop);
+            let expanded = expandHomeDir(prop);
             tfsOpts[propName] = expanded;
         }
     }
-    var statsModule = require('./codestats')(tfsOpts);
-    var initializerModule = require('./repo_initializer')(tfsOpts);
-    var velocitiesModule = require('./velocities')(tfsOpts);
-    var utilsModule = require('./ADOUtilities')(tfsOpts);
-    var buildModule = require('./buildModule')(tfsOpts);
-    var defaultLangs = {
+    import sm = require('./codestats');
+    import im = require('./repo_initializer');
+    import vm = require('./velocities');
+    import um = require('./ADOUtilities');
+    import bm = require('./buildModule');
+    let statsModule = sm(tfsOpts);
+    let initializerModule = im(tfsOpts);
+    let velocitiesModule = vm(tfsOpts);
+    let utilsModule = um(tfsOpts);
+    let buildModule = bm(tfsOpts);
+    const defaultLangs = {
         dotnet: ["C#", "Razor", "ASP", "ASP.NET", "HTML", "CSS", "LESS", "PowerShell", "JavaScript", "TypeScript"],
         android: ["Kotlin", "Java", "XML", "Gradle"],
         ios: ["Objective C", "XML", "C/C++ Header"]
@@ -60,4 +75,5 @@ module.exports = function (opts) {
         defaultLangs: defaultLangs,
         velocityFields: velocitiesModule.velocityFields
     };
-};
+}
+;
