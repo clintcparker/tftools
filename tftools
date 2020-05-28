@@ -32,7 +32,8 @@ program
     .version(thisPackage.version)
     .option("--domain <url>", "name of your ADO instance. Defaults to " + defaultDomain, defaultDomain)
     .option("-o, --outputDir <dir>", "optional directory for output. defaults to ~/" + defaultOutput, getOutputDir , getOutputDir(defaultOutput))
-    .option("--pat <PAT>", "ADO PAT ", "");
+    .option("--pat <PAT>", "ADO PAT ", "")
+    .option("--printOpts", "for that classic printf debugging ;)");
     //.option("-c, --openCsv", "open csv file on completion", false)
     //.option("-w, --warnings", "show warnings", false);
 
@@ -103,8 +104,10 @@ async function velocities(){
         lateAfterDays: velocityCommands.late
         
     };
-    //console.log(ADOOpts)
-    //console.log(velocityOpts)
+    if (program.printOpts){
+        console.log(ADOOpts)
+        console.log(velocityOpts)
+    }
     let  ADOTools = ADOModule(ADOOpts);
     let velocityFields =ADOTools.velocityFields;
     let results = await ADOTools.velocities(velocityOpts);
@@ -133,10 +136,10 @@ async function stats(){
         pull : statsCommands.pull,
 
     };
-    console.log(ADOOpts);
-    console.log(statsOpts);
-    //console.log(ADOOpts)
-    //console.log(velocityOpts)
+    if (program.printOpts){
+        console.log(ADOOpts);
+        console.log(statsOpts);
+    }
     let  ADOTools = ADOModule(ADOOpts);
     let results = await ADOTools.codeStats(statsOpts);
     console.table(results.flat());
