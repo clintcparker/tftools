@@ -8,3 +8,4 @@ scratch*
 booker.js
 coverage/
 .nyc_output/
+.vscode/settings.json
