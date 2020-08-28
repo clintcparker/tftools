@@ -233,6 +233,7 @@ const buildModule = function(tfsOpts) {
         }
         var id = buildData ? buildData.id: "";
         var uri = buildData ? buildData.uri:"";
+        url = buildData ? buildData._links.web.href:"";
         return {id:id,url:url,uri:uri};
     }
 
