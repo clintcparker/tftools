@@ -20,7 +20,7 @@ including the reference
 #### Options
 
 ```
-$ tftools velocities -h                                                                                                                                                                                       v2.0.12 
+$ tftools velocities -h                                                                                                                                          
 Usage: velocities [options]
 
 get  velocities for all teams in a project
