@@ -35,14 +35,8 @@ module.exports = function(opts){
 
     if(tfsOpts.ANALYTICS_HOST == undefined){
         var ANALYTICS_URL = new URL(tfsOpts.ADO_HOST);
-        var hostArray = ANALYTICS_URL.origin.split(".");
-        var tld = hostArray.pop();
-        var domain = hostArray.pop();
-        hostArray.push("analytics");
-        hostArray.push(domain);
-        hostArray.push(tld);
-        var host = hostArray.join(".");
-        tfsOpts.ANALYTICS_HOST = host;
+        ANALYTICS_URL.host="analytics."+ANALYTICS_URL.host;
+        tfsOpts.ANALYTICS_HOST = ANALYTICS_URL.href;
     }
 
     //for each property in opts
