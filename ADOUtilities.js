@@ -57,7 +57,8 @@ const tfsUtilsModule = function(tfsOpts) {
             rejectUnauthorized:false, 
 
         };
-        options.headers=await buildHeaders(tfsOpts.PAT,options.host);
+        var headerhost = new URL(options.host).host;
+        options.headers=await buildHeaders(tfsOpts.PAT,headerhost/*options.host*/);
         options.url = `${options.host}${options.path}`;
 
         return new Promise( async(resolve,reject) => {
@@ -109,7 +110,8 @@ const tfsUtilsModule = function(tfsOpts) {
             path: path,
             rejectUnauthorized:false,
         };
-        options.headers=buildHeaders(tfsOpts.PAT,options.host);
+        var headerhost = new URL(options.host).host;
+        options.headers=buildHeaders(tfsOpts.PAT,headerhost);
         options.url = `${options.host}${options.path}`;
 
         return new Promise( async(resolve,reject) => {
