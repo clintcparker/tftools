@@ -18,7 +18,7 @@
     "request": "^2.88.0",
     "retry-request": "^4.1.1",
     "rimraf": "^2.6.3",
-    "simple-git": "^1.120.0",
+    "simple-git": "^3.5.0",
     "tiny-async-pool": "^1.0.4"
   },
   "devDependencies": {
