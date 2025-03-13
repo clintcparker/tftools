@@ -343,7 +343,7 @@ const statsModule = function(tfsOpts) {
 
 
     function isValidBuild(build){
-        var isGated = build.definition.name.toLowerCase().includes("gated");
+        var isGated = build.definition.name.toLowerCase().includes("Analysis");
         var isSonar = build.definition.name.toLowerCase().includes("sonar");
         var isGood = build.result.toLowerCase().includes("succeeded");
         return isGated || isSonar;

@@ -152,7 +152,7 @@ const buildModule = function(tfsOpts) {
     async function getBuildDefs(repositoryId,project)
     {
         const queryParameters = {
-            "$top" : "15",
+            "$top" : "60",
             //"resultFilter" : "succeeded",
             //"resultFilter" : "partiallySucceeded",
             "repositoryId" : repositoryId,
@@ -167,8 +167,8 @@ const buildModule = function(tfsOpts) {
 
     async function getBuildDefinitionForRepo(repo){
         var buildDefs = await getBuildDefs(repo.id,repo.project);
-        var gated = buildDefs.find(x=>x.name.toLowerCase().includes("gated"));
-        var sonar = buildDefs.find(x=>x.name.toLowerCase().includes("sonar"));
+        var gated = buildDefs.find(x=>x.name.toLowerCase().includes("- validation"));
+        var sonar = buildDefs.find(x=>x.name.toLowerCase().includes("analysis"));
         var buildDef = buildDefs[0];
         if(gated){
             return gated;
@@ -182,8 +182,8 @@ const buildModule = function(tfsOpts) {
     async function getLatestBuildSource(repo, hash, branch){
         function isValidBuild(build){
             try{
-                var isGated = build.definition.name.toLowerCase().includes("gated");
-                var isSonar = build.definition.name.toLowerCase().includes("sonar");
+                var isGated = build.definition.name.toLowerCase().includes("validation");
+                var isSonar = build.definition.name.toLowerCase().includes("analysis");
                 var isGood = build.result.toLowerCase().includes("succeeded");
                 return (isGated || isSonar) && isGood  && (build.sourceVersion == hash);
             } catch (err){
@@ -201,7 +201,7 @@ const buildModule = function(tfsOpts) {
         //     buildDef = sonar;
         // }
         const queryParameters = {
-            "$top" : "15",
+            "$top" : "60",
             //"resultFilter" : "succeeded",
             //"resultFilter" : "partiallySucceeded",
             "repositoryId" : repo.id,
