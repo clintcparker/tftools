@@ -6,7 +6,7 @@ const statsModule = function(tfsOpts) {
     const util = require('util');
     const exec = util.promisify(require('child_process').exec);
     const path = require("path");
-    const git = require("simple-git")();
+    const git = require("simple-git");
     const { parse } = require('json2csv');
     const asyncPool = require('tiny-async-pool');
     const expandHomeDir = require('expand-home-dir');
@@ -127,7 +127,11 @@ const statsModule = function(tfsOpts) {
             if (getCLOC)
             {
                 var {stdout, stderr} = await exec(`ls`,{"cwd":`${outputDirectory}`});
-                var ls = stdout.replace(/\n/g, " ");
+                // Sanitize ls output to prevent command injection
+                var ls = stdout.split(/\r?\n/).filter(f => f.trim() !== '').map(f => {
+                    // Only allow alphanumeric, dash, underscore, and dot for filenames
+                    return f.replace(/[^a-zA-Z0-9._-]/g, '');
+                }).join(" ");
                 var {stdout, stderr} = await exec(`cloc --sum-reports --out="${path.join(outputDirectory,"totals")}" ${ls}`,{"cwd":`${outputDirectory}`});
                 var {stdout, stderr} = await exec(`cloc --csv --sum-reports --out="${path.join(outputDirectory,"totals-csv")}" ${ls}`,{"cwd":`${outputDirectory}`});
                 var {stdout, stderr} = await exec(`cloc --json --sum-reports ${ls}`,{"cwd":`${outputDirectory}`});
@@ -165,16 +169,17 @@ const statsModule = function(tfsOpts) {
             };
             
             var filename = path.join(outputDirectory,repo);
-            await git.cwd(path.join(TOP_DIRECTORY,repo));
+            const gitInstance = git();
+            await gitInstance.cwd(path.join(TOP_DIRECTORY,repo));
             //console.log(gitConfigFile);
             if(statsOpts.pull){
-                await git.pull();
+                await gitInstance.pull();
             }
             var branchName;
-            await git.status(function(err,status){
+            await gitInstance.status(function(err,status){
                 branchName = status.current;
             });
-            let hash = await getHash(TOP_DIRECTORY,repo,dateStr);
+            let hash = await getHash(TOP_DIRECTORY,repo,dateStr,gitInstance);
             let grep_tests = 0;
             let clocResults;
             if (statsOpts.build){
@@ -194,13 +199,15 @@ const statsModule = function(tfsOpts) {
                 
             if(getTests){
                 if(hash != ""){
-                    await git.checkout(`${hash}`);
-                    var testCommand = `grep -Eo -r -i "\\s*\\[(Fact|TestMethod|Theory).*" ${path.join(TOP_DIRECTORY,repo,"*")} | wc -l`;
-                    var { stdout, stderr } = await exec(testCommand);
+                    await gitInstance.checkout(`${hash}`);
+                    // Use array syntax to prevent command injection
+                    var testDir = path.join(TOP_DIRECTORY,repo,"*");
+                    var testCommand = `grep -Eo -r -i "\\s*\\[(Fact|TestMethod|Theory).*" . | wc -l`;
+                    var { stdout, stderr } = await exec(testCommand, {"cwd": path.join(TOP_DIRECTORY,repo)});
                     //console.log(stdout);
                     grep_tests = await parseInt(stdout,10);
                     //console.log(grep_tests);
-                    await git.checkout(branchName);
+                    await gitInstance.checkout(branchName);
                 }
             }
             
@@ -295,7 +302,9 @@ const statsModule = function(tfsOpts) {
                 }
                 let cloc_command_args = clocCommandArr.join("  ");
 
-                let cloc_command = `cloc ${cloc_command_args} ${hash}`;
+                // Sanitize hash to prevent command injection - only allow hex characters
+                let sanitizedHash = hash.replace(/[^a-f0-9]/gi, '');
+                let cloc_command = `cloc ${cloc_command_args} ${sanitizedHash}`;
 
                 var { stdout, stderr } = await exec(cloc_command,{"cwd":`${dirPath}`});
                 resolve (stdout);
@@ -317,10 +326,13 @@ const statsModule = function(tfsOpts) {
         });
     }
 
-    async function getHash(TOP_DIRECTORY,repo,dateStr){
+    async function getHash(TOP_DIRECTORY,repo,dateStr,gitInstance){
         const logOpts = {"--max-count":"1", "--before":`"${dateStr}"`};
+        if (!gitInstance) {
+            gitInstance = git();
+        }
         return new Promise( async resolve => {
-            await git.cwd(path.join(TOP_DIRECTORY,repo)).log(logOpts, function(err, logs){
+            await gitInstance.cwd(path.join(TOP_DIRECTORY,repo)).log(logOpts, function(err, logs){
                 let hash ="";
                 //"21ecc43d801828678e97396239df25050fc9902e"   data2.latest.hash
                 //console.log(logs.latest.hash);

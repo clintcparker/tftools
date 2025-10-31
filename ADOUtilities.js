@@ -1,11 +1,18 @@
 "use strict";
 const tfsUtilsModule = function(tfsOpts) {
-    const request = require('retry-request', {
-        request: require('request')
-    });
+    const axios = require('axios');
+    const axiosRetry = require('axios-retry').default;
     //#endregion node modules
     const https = require('https');
     const querystring = require('querystring');
+
+    // Configure axios with retry logic
+    const axiosInstance = axios.create();
+    axiosRetry(axiosInstance, {
+        retries: 10,
+        retryDelay: axiosRetry.exponentialDelay,
+        shouldResetTimeout: true
+    });
 
     const REPO_API_PATH = "/_apis/git/repositories?api-version=5.0";
     const BUILD_API_PATH = "/_apis/build/builds?api-version=5.0";
@@ -50,37 +57,22 @@ const tfsUtilsModule = function(tfsOpts) {
 
     async function ADORequest(path)
     {
-        const options = {
-            host: tfsOpts.ADO_HOST,
-            port: 443,
-            path: path,
-            rejectUnauthorized:false, 
+        const url = `${tfsOpts.ADO_HOST}${path}`;
+        var headerhost = new URL(tfsOpts.ADO_HOST).host;
+        const headers = await buildHeaders(tfsOpts.PAT, headerhost);
 
-        };
-        var headerhost = new URL(options.host).host;
-        options.headers=await buildHeaders(tfsOpts.PAT,headerhost/*options.host*/);
-        options.url = `${options.host}${options.path}`;
-
-        return new Promise( async(resolve,reject) => {
-            var opts = {
-                shouldRetryFn: retryFunction,
-                retries: 10
-            };
-            //request(options,opts,requestCallback(resolve,reject))
-            request(options,opts,function(error, response, body){
-                if(error){
-                    reject(`${path}  ${error}`);
-                    return;
-                }
-                if(response.statusCode>=400)
-                {
-                    reject(`${path}  ${body}`);
-                    return;
-                }
-                var data = JSON.parse(body);
-                resolve(data);
+        try {
+            const response = await axiosInstance.get(url, {
+                headers: headers,
+                httpsAgent: new https.Agent({
+                    rejectUnauthorized: tfsOpts.rejectUnauthorized !== undefined ? tfsOpts.rejectUnauthorized : true
+                })
             });
-        });
+            return response.data;
+        } catch (error) {
+            const errorMsg = error.response ? error.response.data : error.message;
+            throw new Error(`${path}  ${errorMsg}`);
+        }
     }
 
     function requestCallback(resolve,reject){
@@ -104,36 +96,22 @@ const tfsUtilsModule = function(tfsOpts) {
 
     async function analyticsRequest(path)
     {
-        const options = {
-            host: tfsOpts.ANALYTICS_HOST,
-            port: 443,
-            path: path,
-            rejectUnauthorized:false,
-        };
-        var headerhost = new URL(options.host).host;
-        options.headers=buildHeaders(tfsOpts.PAT,headerhost);
-        options.url = `${options.host}${options.path}`;
+        const url = `${tfsOpts.ANALYTICS_HOST}${path}`;
+        var headerhost = new URL(tfsOpts.ANALYTICS_HOST).host;
+        const headers = buildHeaders(tfsOpts.PAT, headerhost);
 
-        return new Promise( async(resolve,reject) => {
-            var opts = {
-                shouldRetryFn: retryFunction,
-                retries: 10
-            };
-            //request(options,opts,requestCallback(resolve,reject))
-            request(options,opts,function(error, response, body){
-                if(error){
-                    reject(`${path}  ${error}`);
-                    return;
-                }
-                if(response.statusCode>=400)
-                {
-                    reject(`${path}  ${body}`);
-                    return;
-                }
-                var data = JSON.parse(body);
-                resolve(data);
+        try {
+            const response = await axiosInstance.get(url, {
+                headers: headers,
+                httpsAgent: new https.Agent({
+                    rejectUnauthorized: tfsOpts.rejectUnauthorized !== undefined ? tfsOpts.rejectUnauthorized : true
+                })
             });
-        });
+            return response.data;
+        } catch (error) {
+            const errorMsg = error.response ? error.response.data : error.message;
+            throw new Error(`${path}  ${errorMsg}`);
+        }
     }
 
     async function getRepos(){
@@ -172,15 +150,15 @@ const tfsUtilsModule = function(tfsOpts) {
             // //"reasonFilter":"pullRequest",
             // "minTime" : buildDateString(endDate)
         };
-        var proj = "0fa9dfee-f92d-4a1b-9d77-071a4f54265a";
+        // NOTE: This function contains example hardcoded values and should be updated with actual project parameters
+        var proj = projectId; // Use passed parameter instead of hardcoded value
         var path= `/${proj}${tfsOpts.BUILD_API_PATH}&${querystring.stringify(queryParameters)}`;
-        //for merchant data importer
         var body = JSON.stringify({
             definition:{
-                id:1468,
+                id: repoId, // Use passed parameter
             },
-            repository:{id:'65fa7b83-5c9b-4fb9-9046-4aae31e67882'},
-            sourceVersion:"5977f3f5b897bd8069b0c9af1372fe064104b3f5"
+            repository:{id: repoId},
+            sourceVersion: hash // Use passed parameter
         });
         // const options = {
         //     hostname: 'www.google.com',
@@ -197,7 +175,7 @@ const tfsUtilsModule = function(tfsOpts) {
             host: tfsOpts.ADO_HOST,
             port: 443,
             path: path,
-            rejectUnauthorized:false,
+            rejectUnauthorized: tfsOpts.rejectUnauthorized !== undefined ? tfsOpts.rejectUnauthorized : true,
             method: 'POST',
         };
         options.headers=buildHeaders(tfsOpts.PAT,options.host);

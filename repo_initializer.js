@@ -1,12 +1,19 @@
 //#region node modules
 const fs = require("fs");
-const git = require("simple-git")();
-const request = require('retry-request', {
-    request: require('request')
-});
+const git = require("simple-git");
+const axios = require('axios');
+const axiosRetry = require('axios-retry').default;
 const path = require("path");
 const rimraf = require("rimraf");
 const asyncPool = require("tiny-async-pool");
+
+// Configure axios with retry logic
+const axiosInstance = axios.create();
+axiosRetry(axiosInstance, {
+    retries: 10,
+    retryDelay: axiosRetry.exponentialDelay,
+    shouldResetTimeout: true
+});
 
 const initializerModule = function(tfsOpts) {
     //#endregion node modules
@@ -37,10 +44,11 @@ const initializerModule = function(tfsOpts) {
                     y=> x.name == y && !x.remoteUrl.match(pattern)
                 )
             );
-            git.cwd(`${opts.TOP_DIRECTORY}/`);
+            const gitInstance = git();
+            gitInstance.cwd(`${opts.TOP_DIRECTORY}/`);
             let removals = await asyncPool(1,filtered,repo=>{
-                
-                return rmAndClone(path.join(opts.TOP_DIRECTORY,repo.name),repo.remoteUrl);
+
+                return rmAndClone(path.join(opts.TOP_DIRECTORY,repo.name),repo.remoteUrl, gitInstance);
             });
             
         }
@@ -54,46 +62,37 @@ const initializerModule = function(tfsOpts) {
 };
 
 
-async function rmAndClone(dirPath, remote)
+async function rmAndClone(dirPath, remote, gitInstance)
 {
     return new Promise(async (resolve,reject)=> {
         await rimraf(dirPath,async function(err){
-            resolve(await git.clone(remote) );
-        });  
+            if (!gitInstance) {
+                gitInstance = git();
+            }
+            resolve(await gitInstance.clone(remote) );
+        });
     });
 }
 
 async function analyticsRequest(path)
     {
-        const options = {
-            host: tfsOpts.ANALYTICS_HOST,
-            port: 443,
-            path: path,
-            rejectUnauthorized:false,
-        };
-        options.headers=buildHeaders(tfsOpts.PAT,options.host);
-        options.url = `${options.host}${options.path}`;
+        const url = `${tfsOpts.ANALYTICS_HOST}${path}`;
+        var headerhost = new URL(tfsOpts.ANALYTICS_HOST).host;
+        const headers = buildHeaders(tfsOpts.PAT, headerhost);
+        const https = require('https');
 
-        return new Promise( async(resolve,reject) => {
-            var opts = {
-                shouldRetryFn: retryFunction,
-                retries: 10
-            };
-            //request(options,opts,requestCallback(resolve,reject))
-            request(options,opts,function(error, response, body){
-                if(error){
-                    reject(`${path}  ${error}`);
-                    return;
-                }
-                if(response.statusCode>=400)
-                {
-                    reject(`${path}  ${body}`);
-                    return;
-                }
-                var data = JSON.parse(body);
-                resolve(data);
+        try {
+            const response = await axiosInstance.get(url, {
+                headers: headers,
+                httpsAgent: new https.Agent({
+                    rejectUnauthorized: tfsOpts.rejectUnauthorized !== undefined ? tfsOpts.rejectUnauthorized : true
+                })
             });
-        });
+            return response.data;
+        } catch (error) {
+            const errorMsg = error.response ? error.response.data : error.message;
+            throw new Error(`${path}  ${errorMsg}`);
+        }
     }
 
 
