@@ -4,7 +4,7 @@ const buildModule = function(tfsOpts) {
     const querystring = require('querystring');
     const util = require('util');
     const path = require("path");
-    const git = require("simple-git")();
+    const git = require("simple-git");
     const { parse } = require('json2csv');
     const https = require("https");
     const asyncPool  = require("tiny-async-pool");
@@ -14,16 +14,17 @@ const buildModule = function(tfsOpts) {
         var gitConfigFile = path.join(TOP_DIRECTORY,repo,".git","config");
         var remote = await getRemoteFromFile(gitConfigFile);
         var repoInfo = await getRepoInfoFromRemoteUrl(remote);
-        await git.cwd(path.join(TOP_DIRECTORY,repo));
+        const gitInstance = git();
+        await gitInstance.cwd(path.join(TOP_DIRECTORY,repo));
         //console.log(gitConfigFile);
-        //await git.pull();
+        //await gitInstance.pull();
         var branchName;
-        await git.status(function(err,status){
+        await gitInstance.status(function(err,status){
             branchName = status.current;
         });
         var logOpts = {"--max-count":"1", "--before":`"${dateStr}"`};
         var hash = "";
-        await git.log(logOpts, function(err, logs){
+        await gitInstance.log(logOpts, function(err, logs){
             //"21ecc43d801828678e97396239df25050fc9902e"   data2.latest.hash
             //console.log(logs.latest.hash);
             if(logs.latest){
@@ -95,7 +96,7 @@ const buildModule = function(tfsOpts) {
             host: tfsOpts.ADO_HOST,
             port: 443,
             path: path,
-            rejectUnauthorized:false,
+            rejectUnauthorized: tfsOpts.rejectUnauthorized !== undefined ? tfsOpts.rejectUnauthorized : true,
             method: 'POST',
         };
         options.headers=tfsUtils.buildHeaders(tfsOpts.PAT,options.host);

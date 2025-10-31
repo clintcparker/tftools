@@ -13,10 +13,10 @@ module.exports = function(opts){
     if(tfsOpts.ADO_HOST == undefined)
     {
         const ADO_HOST_MESSAGE = `The ADO_HOST property is required!
-        Ex: https://dev.azure.com/093231b1-334c-4cfc-abd8-882b7085
-        Ex: https://customsubdomain.visualstudio.com
-        
-        
+        Ex: https://dev.azure.com/[your-organization]
+        Ex: https://[your-subdomain].visualstudio.com
+
+
         ref: https://docs.microsoft.com/en-us/rest/api/azure/devops/
         `;
         console.error(ADO_HOST_MESSAGE);
@@ -25,7 +25,7 @@ module.exports = function(opts){
     if(tfsOpts.PAT == undefined)
     {
         const PAT_MESSAGE = `The PAT property is required!
-        Ex: qaldqr4se5gs5g5h6limdfe53z6sbk2ipsylu776kahrotpevrmtatq
+        Ex: [Your Personal Access Token here]
 
         ref: https://docs.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/pats
         `;
