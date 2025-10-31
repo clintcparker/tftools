@@ -9,3 +9,7 @@ booker.js
 coverage/
 .nyc_output/
 .vscode/settings.json
+
+# TypeScript build outputs
+dist/
+*.tsbuildinfo
